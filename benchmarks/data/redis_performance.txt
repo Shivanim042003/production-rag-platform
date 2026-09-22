@@ -1,0 +1,13 @@
+﻿Redis performance depends on memory usage, command complexity, network latency, data structures, and workload patterns.
+
+Redis can reduce database load by serving frequently requested values directly from memory.
+
+The cache-aside pattern is commonly used with Redis. An application first checks the cache, and if the requested value is missing, it queries the database and stores the result in Redis.
+
+TTL values are useful for cached information that should become invalid after a certain amount of time.
+
+Redis lists can be used for queues, while sorted sets can support ordered collections and ranking-style workloads.
+
+Monitoring Redis memory usage is important because memory pressure can cause eviction of keys according to the configured eviction policy.
+
+Batching operations and reducing unnecessary network round trips can improve application performance.

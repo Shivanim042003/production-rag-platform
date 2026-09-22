@@ -1,0 +1,11 @@
+﻿PostgreSQL is an open-source relational database management system.
+
+PostgreSQL supports SQL queries and provides transactional guarantees through ACID properties. Transactions allow multiple database operations to succeed or fail together.
+
+Indexes improve query performance by allowing PostgreSQL to locate rows without scanning an entire table. Common index types include B-tree, Hash, GiST, SP-GiST, GIN, and BRIN.
+
+Query planning is handled by the PostgreSQL query planner. The planner evaluates possible execution strategies and chooses an execution plan based on estimated costs.
+
+EXPLAIN and EXPLAIN ANALYZE can be used to inspect query execution plans and identify expensive operations such as sequential scans, inefficient joins, or poor index usage.
+
+PostgreSQL also supports concurrency control through mechanisms including MVCC. Multiple transactions can operate concurrently while maintaining database consistency.

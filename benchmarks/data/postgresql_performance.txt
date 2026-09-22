@@ -1,0 +1,11 @@
+﻿PostgreSQL query performance depends on indexes, query structure, statistics, available memory, and the chosen execution plan.
+
+An index can reduce the amount of data PostgreSQL needs to scan. However, indexes also consume storage and add overhead to INSERT, UPDATE, and DELETE operations.
+
+The EXPLAIN command shows the execution plan selected by PostgreSQL. EXPLAIN ANALYZE executes the query and reports actual execution statistics.
+
+The ANALYZE command collects statistics about table contents. PostgreSQL uses these statistics when estimating the cost and selectivity of different query plans.
+
+Connection pooling can reduce the overhead of establishing database connections. Caching frequently accessed application data can also reduce repeated database work.
+
+Poorly designed joins, unnecessary columns, missing indexes, and inefficient filtering can all contribute to slow database queries.

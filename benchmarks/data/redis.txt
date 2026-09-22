@@ -1,0 +1,11 @@
+﻿Redis is an in-memory data store commonly used for caching and low-latency workloads.
+
+Redis supports data structures including strings, lists, sets, sorted sets, hashes, streams, and bitmaps.
+
+Caching application data in Redis can reduce the number of requests sent to a primary database. Applications often use a cache-aside pattern where data is read from Redis first and loaded from the database when absent.
+
+Redis keys can have expiration times. Expiration allows cached values to be removed automatically after a configured period.
+
+Redis provides commands for setting, retrieving, updating, and deleting keys. Atomic operations can help applications coordinate updates safely.
+
+Because Redis primarily operates in memory, latency for many operations is very low. Persistence mechanisms such as RDB snapshots and AOF logging can be used when durable recovery is required.

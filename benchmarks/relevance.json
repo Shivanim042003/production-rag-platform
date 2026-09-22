@@ -1,0 +1,62 @@
+[
+  {
+    "query": "What are PostgreSQL indexes used for?",
+    "relevant_chunks": [
+      "postgresql_chunk_001",
+      "postgresql_chunk_002",
+      "postgresql_performance_chunk_001"
+    ]
+  },
+  {
+    "query": "How does PostgreSQL inspect query execution plans?",
+    "relevant_chunks": [
+      "postgresql_chunk_003",
+      "postgresql_chunk_004",
+      "postgresql_performance_chunk_002"
+    ]
+  },
+  {
+    "query": "How does PostgreSQL use statistics for query planning?",
+    "relevant_chunks": [
+      "postgresql_chunk_003",
+      "postgresql_performance_chunk_001",
+      "postgresql_performance_chunk_003"
+    ]
+  },
+  {
+    "query": "How does PostgreSQL provide concurrency control?",
+    "relevant_chunks": [
+      "postgresql_chunk_004"
+    ]
+  },
+  {
+    "query": "How does Redis reduce database load?",
+    "relevant_chunks": [
+      "redis_chunk_001",
+      "redis_chunk_002",
+      "redis_performance_chunk_001"
+    ]
+  },
+  {
+    "query": "How does Redis expiration work?",
+    "relevant_chunks": [
+      "redis_chunk_003",
+      "redis_performance_chunk_002",
+      "redis_performance_chunk_003"
+    ]
+  },
+  {
+    "query": "What data structures does Redis support?",
+    "relevant_chunks": [
+      "redis_chunk_001",
+      "redis_performance_chunk_003"
+    ]
+  },
+  {
+    "query": "What factors affect Redis performance?",
+    "relevant_chunks": [
+      "redis_performance_chunk_001",
+      "redis_performance_chunk_004"
+    ]
+  }
+]
