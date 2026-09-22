@@ -1,94 +1,123 @@
 ﻿import pytest
 
 from rag.fusion import reciprocal_rank_fusion
-from rag.models import DocumentChunk
+from rag.models import DocumentChunk, RetrievalResult
 
 
-def make_chunk(chunk_id: str) -> DocumentChunk:
-    return DocumentChunk(
+def make_result(
+    chunk_id: str,
+    retriever: str,
+    score: float,
+) -> RetrievalResult:
+    chunk = DocumentChunk(
         chunk_id=chunk_id,
         document_id="doc_001",
         text=f"Text for {chunk_id}",
         source="data/example.txt",
     )
 
+    return RetrievalResult(
+        chunk=chunk,
+        score=score,
+        retriever=retriever,
+    )
+
 
 def test_rrf_combines_rankings() -> None:
-    a = make_chunk("A")
-    b = make_chunk("B")
-    c = make_chunk("C")
-    d = make_chunk("D")
+    a_dense = make_result("A", "dense", 0.90)
+    b_dense = make_result("B", "dense", 0.80)
+    c_dense = make_result("C", "dense", 0.70)
 
-    dense_results = [
-        (a, 0.90),
-        (b, 0.80),
-        (c, 0.70),
-    ]
-
-    bm25_results = [
-        (b, 5.0),
-        (a, 4.0),
-        (d, 3.0),
-    ]
+    b_bm25 = make_result("B", "bm25", 5.0)
+    a_bm25 = make_result("A", "bm25", 4.0)
+    d_bm25 = make_result("D", "bm25", 3.0)
 
     results = reciprocal_rank_fusion(
-        [dense_results, bm25_results],
+        [
+            [a_dense, b_dense, c_dense],
+            [b_bm25, a_bm25, d_bm25],
+        ],
         k=60,
     )
 
-    assert [chunk.chunk_id for chunk, _ in results] == [
+    assert [result.chunk.chunk_id for result in results] == [
         "A",
         "B",
         "C",
         "D",
     ]
 
+    assert all(result.retriever == "rrf" for result in results)
+
 
 def test_rrf_score_is_sum_of_rank_contributions() -> None:
-    a = make_chunk("A")
-
-    dense_results = [
-        (a, 0.90),
-    ]
-
-    bm25_results = [
-        (a, 5.0),
-    ]
+    a_dense = make_result("A", "dense", 0.90)
+    a_bm25 = make_result("A", "bm25", 5.0)
 
     results = reciprocal_rank_fusion(
-        [dense_results, bm25_results],
+        [
+            [a_dense],
+            [a_bm25],
+        ],
         k=60,
     )
 
     expected = (1 / 61) + (1 / 61)
 
-    assert results[0][0].chunk_id == "A"
-    assert results[0][1] == pytest.approx(expected)
+    assert results[0].chunk.chunk_id == "A"
+    assert results[0].score == pytest.approx(expected)
 
 
-def test_rrf_preserves_chunk_object() -> None:
-    a = make_chunk("A")
-
-    results = reciprocal_rank_fusion(
-        [[(a, 0.5)]],
+def test_rrf_preserves_chunk() -> None:
+    chunk = DocumentChunk(
+        chunk_id="A",
+        document_id="doc_001",
+        text="Text for A",
+        source="data/example.txt",
     )
 
-    assert results[0][0] is a
+    result = RetrievalResult(
+        chunk=chunk,
+        score=0.5,
+        retriever="dense",
+    )
+
+    results = reciprocal_rank_fusion([[result]])
+
+    assert results[0].chunk is chunk
+
+
+def test_rrf_records_source_ranks() -> None:
+    dense = make_result("A", "dense", 0.9)
+    bm25 = make_result("A", "bm25", 4.0)
+
+    results = reciprocal_rank_fusion(
+        [
+            [dense],
+            [bm25],
+        ]
+    )
+
+    assert results[0].metadata["rank"] == 1
+    assert results[0].metadata["source_ranks"] == {
+        "dense": 1,
+        "bm25": 1,
+    }
 
 
 def test_rrf_handles_empty_lists() -> None:
-    a = make_chunk("A")
+    result = make_result("A", "dense", 0.5)
 
     results = reciprocal_rank_fusion(
         [
             [],
-            [(a, 0.5)],
+            [result],
             [],
         ]
     )
 
     assert len(results) == 1
-    assert results[0][0].chunk_id == "A"
+    assert results[0].chunk.chunk_id == "A"
 
 
 def test_rrf_handles_completely_empty_input() -> None:
@@ -98,13 +127,13 @@ def test_rrf_handles_completely_empty_input() -> None:
 
 
 def test_rrf_rejects_invalid_k() -> None:
-    a = make_chunk("A")
+    result = make_result("A", "dense", 0.5)
 
     with pytest.raises(
         ValueError,
         match="k must be greater than zero",
     ):
         reciprocal_rank_fusion(
-            [[(a, 0.5)]],
+            [[result]],
             k=0,
         )

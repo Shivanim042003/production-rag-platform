@@ -45,5 +45,5 @@ def test_semantic_retrieval_finds_relevant_document(
     )
 
     assert len(results) == 2
-    assert results[0][0].document_id == "postgresql"
-    assert results[0][1] >= results[1][1]
+    assert results[0].chunk.document_id == "postgresql"
+    assert results[0].score >= results[1].score

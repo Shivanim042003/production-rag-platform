@@ -1,7 +1,7 @@
 ﻿import numpy as np
 import pytest
 
-from rag.models import DocumentChunk
+from rag.models import DocumentChunk, RetrievalResult
 from rag.vector_store import FaissVectorStore
 
 
@@ -41,7 +41,7 @@ def test_add_stores_chunks_and_vectors() -> None:
     assert store.size == 2
 
 
-def test_search_returns_results_in_similarity_order() -> None:
+def test_search_returns_retrieval_results_in_similarity_order() -> None:
     store = FaissVectorStore(dimension=2)
 
     chunks = [
@@ -65,15 +65,40 @@ def test_search_returns_results_in_similarity_order() -> None:
 
     results = store.search(query, top_k=3)
 
-    assert [chunk.chunk_id for chunk, _ in results] == [
+    assert all(
+        isinstance(result, RetrievalResult)
+        for result in results
+    )
+
+    assert [result.chunk.chunk_id for result in results] == [
         "chunk_001",
         "chunk_002",
         "chunk_003",
     ]
 
-    assert np.isclose(results[0][1], 1.0)
-    assert np.isclose(results[1][1], 0.0)
-    assert np.isclose(results[2][1], -1.0)
+    assert np.isclose(results[0].score, 1.0)
+    assert np.isclose(results[1].score, 0.0)
+    assert np.isclose(results[2].score, -1.0)
+
+
+def test_search_records_dense_retrieval_metadata() -> None:
+    store = FaissVectorStore(dimension=2)
+
+    chunk = make_chunk("chunk_001", "A")
+
+    embeddings = np.array(
+        [[1.0, 0.0]],
+        dtype=np.float32,
+    )
+
+    store.add([chunk], embeddings)
+
+    query = np.array([1.0, 0.0], dtype=np.float32)
+
+    results = store.search(query, top_k=1)
+
+    assert results[0].retriever == "dense"
+    assert results[0].metadata["rank"] == 1
 
 
 def test_search_respects_top_k() -> None:
@@ -101,7 +126,7 @@ def test_search_respects_top_k() -> None:
     results = store.search(query, top_k=2)
 
     assert len(results) == 2
-    assert [chunk.chunk_id for chunk, _ in results] == [
+    assert [result.chunk.chunk_id for result in results] == [
         "chunk_001",
         "chunk_002",
     ]

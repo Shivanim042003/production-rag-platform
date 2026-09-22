@@ -3,7 +3,7 @@
 import faiss
 import numpy as np
 
-from rag.models import DocumentChunk
+from rag.models import DocumentChunk, RetrievalResult
 
 
 class FaissVectorStore:
@@ -52,7 +52,7 @@ class FaissVectorStore:
         self,
         query_embedding: np.ndarray,
         top_k: int = 5,
-    ) -> list[tuple[DocumentChunk, float]]:
+    ) -> list[RetrievalResult]:
         if top_k <= 0:
             raise ValueError("top_k must be greater than zero.")
 
@@ -76,16 +76,25 @@ class FaissVectorStore:
 
         scores, indices = self.index.search(query_vector, limit)
 
-        results: list[tuple[DocumentChunk, float]] = []
+        results: list[RetrievalResult] = []
 
-        for score, index in zip(scores[0], indices[0]):
+        for rank, (score, index) in enumerate(
+            zip(scores[0], indices[0]),
+            start=1,
+        ):
             if index == -1:
                 continue
 
+            chunk = self.chunks[int(index)]
+
             results.append(
-                (
-                    self.chunks[int(index)],
-                    float(score),
+                RetrievalResult(
+                    chunk=chunk,
+                    score=float(score),
+                    retriever="dense",
+                    metadata={
+                        "rank": rank,
+                    },
                 )
             )
 
