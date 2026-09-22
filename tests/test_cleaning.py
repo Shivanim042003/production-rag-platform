@@ -35,3 +35,11 @@ def test_clean_text_does_not_change_normal_text() -> None:
     result = clean_text(text)
 
     assert result == text
+
+
+def test_clean_text_removes_utf8_bom() -> None:
+    text = "\ufeffRedis is an in-memory data store."
+
+    result = clean_text(text)
+
+    assert result == "Redis is an in-memory data store."
