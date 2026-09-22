@@ -28,3 +28,15 @@ def test_txt_loader_rejects_unsupported_file() -> None:
 
     with pytest.raises(ValueError, match="Unsupported file type"):
         loader.load()
+
+
+def test_txt_loader_cleans_text() -> None:
+    loader = TxtLoader("data/postgresql.txt")
+
+    document = loader.load()
+
+    assert document.text == (
+        "PostgreSQL is an open-source relational database system.\n"
+        "It supports SQL, transactions, indexes, and complex queries.\n"
+        "PostgreSQL is commonly used for applications that require reliable data storage."
+    )

@@ -1,5 +1,6 @@
-from pathlib import Path
+﻿from pathlib import Path
 
+from rag.cleaning import clean_text
 from rag.models import RawDocument
 
 
@@ -18,10 +19,11 @@ class TxtLoader:
             raise ValueError(f"Path is not a file: {self.path}")
 
         text = self.path.read_text(encoding="utf-8")
+        cleaned_text = clean_text(text)
 
         return RawDocument(
             document_id=self.path.stem,
-            text=text,
+            text=cleaned_text,
             source=str(self.path),
             metadata={
                 "file_type": "txt",
