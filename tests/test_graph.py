@@ -52,9 +52,13 @@ class FakeGrader:
             (
                 result,
                 RelevanceGrade(
-                    relevant=True,
-                    score=0.9,
-                    reason="Relevant.",
+                    relevant=self.sufficient,
+                    score=0.9 if self.sufficient else 0.1,
+                    reason=(
+                        "Relevant."
+                        if self.sufficient
+                        else "Not relevant."
+                    ),
                 ),
             )
             for result in results
@@ -68,7 +72,10 @@ class FakeGrader:
         return self.sufficient
 
 
-def make_graph(sufficient: bool = True):
+def make_graph(
+    sufficient: bool = True,
+    max_retries: int = 2,
+):
     retrieve_node = RetrieveNode(
         retriever=FakeRetriever(),
         top_k=2,
@@ -90,6 +97,7 @@ def make_graph(sufficient: bool = True):
         retrieve_node,
         rerank_node,
         grade_node,
+        max_retries=max_retries,
     )
 
 
@@ -144,6 +152,7 @@ def test_graph_ends_after_grading() -> None:
 
     assert state["answer"] is None
     assert state["grounded"] is None
+    assert state["retry_count"] == 0
 
 
 def test_graph_routes_to_generate_when_context_is_sufficient() -> None:
@@ -157,10 +166,14 @@ def test_graph_routes_to_generate_when_context_is_sufficient() -> None:
 
     assert state["retry_count"] == 0
     assert state["sufficient_context"] is True
+    assert state["answer"] is None
 
 
-def test_graph_routes_to_retry_when_context_is_insufficient() -> None:
-    graph = make_graph(sufficient=False)
+def test_graph_retries_when_context_is_insufficient() -> None:
+    graph = make_graph(
+        sufficient=False,
+        max_retries=2,
+    )
 
     state = graph.invoke(
         RAGState(
@@ -168,5 +181,39 @@ def test_graph_routes_to_retry_when_context_is_insufficient() -> None:
         )
     )
 
-    assert state["retry_count"] == 1
+    assert state["retry_count"] == 2
+    assert state["sufficient_context"] is False
+
+
+def test_graph_routes_to_fallback_after_max_retries() -> None:
+    graph = make_graph(
+        sufficient=False,
+        max_retries=2,
+    )
+
+    state = graph.invoke(
+        RAGState(
+            query="PostgreSQL indexes",
+        )
+    )
+
+    assert state["retry_count"] == 2
+    assert state["answer"] == "I don't have enough information."
+    assert state["sufficient_context"] is False
+
+
+def test_graph_routes_to_fallback_when_retries_are_disabled() -> None:
+    graph = make_graph(
+        sufficient=False,
+        max_retries=0,
+    )
+
+    state = graph.invoke(
+        RAGState(
+            query="PostgreSQL indexes",
+        )
+    )
+
+    assert state["retry_count"] == 0
+    assert state["answer"] == "I don't have enough information."
     assert state["sufficient_context"] is False
