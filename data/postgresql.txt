@@ -1,0 +1,3 @@
+PostgreSQL is an open-source relational database system.
+It supports SQL, transactions, indexes, and complex queries.
+PostgreSQL is commonly used for applications that require reliable data storage.
