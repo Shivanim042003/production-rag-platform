@@ -2,7 +2,7 @@
 
 from rank_bm25 import BM25Okapi
 
-from rag.models import DocumentChunk
+from rag.models import DocumentChunk, RetrievalResult
 
 
 class BM25Retriever:
@@ -27,7 +27,7 @@ class BM25Retriever:
         self,
         query: str,
         top_k: int = 5,
-    ) -> list[tuple[DocumentChunk, float]]:
+    ) -> list[RetrievalResult]:
         if not query.strip():
             raise ValueError("Query cannot be empty.")
 
@@ -51,6 +51,17 @@ class BM25Retriever:
         )
 
         return [
-            (chunk, float(score))
-            for chunk, score in ranked_results[:top_k]
+            RetrievalResult(
+                chunk=chunk,
+                score=float(score),
+                retriever="bm25",
+                metadata={
+                    "query": query,
+                    "rank": rank,
+                },
+            )
+            for rank, (chunk, score) in enumerate(
+                ranked_results[:top_k],
+                start=1,
+            )
         ]

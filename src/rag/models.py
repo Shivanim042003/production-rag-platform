@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+﻿from dataclasses import dataclass, field
 from typing import Any
 
 
@@ -16,4 +16,12 @@ class DocumentChunk:
     document_id: str
     text: str
     source: str
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class RetrievalResult:
+    chunk: DocumentChunk
+    score: float
+    retriever: str
     metadata: dict[str, Any] = field(default_factory=dict)
