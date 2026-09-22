@@ -1,7 +1,8 @@
 ﻿from pathlib import Path
 
+from rag.chunking import fixed_size_chunks
 from rag.cleaning import clean_text
-from rag.models import RawDocument
+from rag.models import DocumentChunk, RawDocument
 
 
 class TxtLoader:
@@ -29,3 +30,18 @@ class TxtLoader:
                 "file_type": "txt",
             },
         )
+
+
+def ingest_txt(
+    path: str | Path,
+    chunk_size: int,
+    overlap: int = 0,
+) -> list[DocumentChunk]:
+    loader = TxtLoader(path)
+    document = loader.load()
+
+    return fixed_size_chunks(
+        document,
+        chunk_size=chunk_size,
+        overlap=overlap,
+    )
