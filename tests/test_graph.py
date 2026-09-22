@@ -1,7 +1,15 @@
-﻿from rag.graph import build_rag_graph
-from rag.graph_nodes import GradeNode, RerankNode, RetrieveNode
+﻿from rag.generator import GenerationResult
+from rag.graph import build_rag_graph
+from rag.graph_nodes import (
+    GenerateNode,
+    GradeNode,
+    GroundingNode,
+    RerankNode,
+    RetrieveNode,
+)
 from rag.grader import RelevanceGrade
 from rag.graph_state import RAGState
+from rag.grounding import GroundingResult
 from rag.models import DocumentChunk, RetrievalResult
 
 
@@ -72,8 +80,49 @@ class FakeGrader:
         return self.sufficient
 
 
+class FakeGenerator:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def generate(
+        self,
+        query: str,
+        context: list[str],
+    ) -> GenerationResult:
+        self.calls.append((query, context))
+
+        return GenerationResult(
+            answer="PostgreSQL indexes improve query performance.",
+            model="fake-model",
+        )
+
+
+class FakeGroundingChecker:
+    def __init__(self, grounded: bool = True) -> None:
+        self.grounded = grounded
+        self.calls = []
+
+    def check(
+        self,
+        answer: str,
+        context: list[str],
+    ) -> GroundingResult:
+        self.calls.append((answer, context))
+
+        return GroundingResult(
+            grounded=self.grounded,
+            score=1.0 if self.grounded else 0.0,
+            reason=(
+                "Supported."
+                if self.grounded
+                else "Unsupported."
+            ),
+        )
+
+
 def make_graph(
     sufficient: bool = True,
+    grounded: bool = True,
     max_retries: int = 2,
 ):
     retrieve_node = RetrieveNode(
@@ -89,26 +138,49 @@ def make_graph(
     )
 
     grade_node = GradeNode(
-        grader=FakeGrader(sufficient=sufficient),
+        grader=FakeGrader(
+            sufficient=sufficient,
+        ),
         min_relevant=1,
     )
 
-    return build_rag_graph(
-        retrieve_node,
-        rerank_node,
-        grade_node,
+    generator = FakeGenerator()
+
+    generate_node = GenerateNode(
+        generator=generator,
+    )
+
+    grounding_checker = FakeGroundingChecker(
+        grounded=grounded,
+    )
+
+    grounding_node = GroundingNode(
+        checker=grounding_checker,
+    )
+
+    graph = build_rag_graph(
+        retrieve_node=retrieve_node,
+        rerank_node=rerank_node,
+        grade_node=grade_node,
+        generate_node=generate_node,
+        grounding_node=grounding_node,
         max_retries=max_retries,
     )
 
+    return graph, generator, grounding_checker
+
 
 def test_graph_builds_successfully() -> None:
-    graph = make_graph()
+    graph, _, _ = make_graph()
 
     assert graph is not None
 
 
-def test_graph_runs_retrieve_rerank_grade_flow() -> None:
-    graph = make_graph()
+def test_graph_runs_full_retrieve_rerank_grade_generate_ground_flow() -> None:
+    graph, generator, grounding_checker = make_graph(
+        sufficient=True,
+        grounded=True,
+    )
 
     state = graph.invoke(
         RAGState(
@@ -119,16 +191,25 @@ def test_graph_runs_retrieve_rerank_grade_flow() -> None:
     assert len(state["candidates"]) == 2
     assert len(state["reranked_results"]) == 2
     assert len(state["graded_results"]) == 2
-    assert state["sufficient_context"] is True
 
+    assert state["sufficient_context"] is True
     assert state["context"] == [
         "PostgreSQL supports transactions.",
         "PostgreSQL supports indexes.",
     ]
 
+    assert state["answer"] == (
+        "PostgreSQL indexes improve query performance."
+    )
+
+    assert state["grounded"] is True
+
+    assert len(generator.calls) == 1
+    assert len(grounding_checker.calls) == 1
+
 
 def test_graph_preserves_query() -> None:
-    graph = make_graph()
+    graph, _, _ = make_graph()
 
     state = graph.invoke(
         RAGState(
@@ -141,22 +222,11 @@ def test_graph_preserves_query() -> None:
     )
 
 
-def test_graph_ends_after_grading() -> None:
-    graph = make_graph()
-
-    state = graph.invoke(
-        RAGState(
-            query="PostgreSQL"
-        )
+def test_graph_generates_only_when_context_is_sufficient() -> None:
+    graph, generator, grounding_checker = make_graph(
+        sufficient=True,
+        grounded=True,
     )
-
-    assert state["answer"] is None
-    assert state["grounded"] is None
-    assert state["retry_count"] == 0
-
-
-def test_graph_routes_to_generate_when_context_is_sufficient() -> None:
-    graph = make_graph(sufficient=True)
 
     state = graph.invoke(
         RAGState(
@@ -164,14 +234,17 @@ def test_graph_routes_to_generate_when_context_is_sufficient() -> None:
         )
     )
 
-    assert state["retry_count"] == 0
     assert state["sufficient_context"] is True
-    assert state["answer"] is None
+    assert state["answer"] is not None
+    assert state["grounded"] is True
+    assert len(generator.calls) == 1
+    assert len(grounding_checker.calls) == 1
 
 
 def test_graph_retries_when_context_is_insufficient() -> None:
-    graph = make_graph(
+    graph, generator, grounding_checker = make_graph(
         sufficient=False,
+        grounded=True,
         max_retries=2,
     )
 
@@ -183,10 +256,16 @@ def test_graph_retries_when_context_is_insufficient() -> None:
 
     assert state["retry_count"] == 2
     assert state["sufficient_context"] is False
+    assert state["answer"] == (
+        "I don't have enough information."
+    )
+
+    assert len(generator.calls) == 0
+    assert len(grounding_checker.calls) == 0
 
 
-def test_graph_routes_to_fallback_after_max_retries() -> None:
-    graph = make_graph(
+def test_graph_falls_back_after_max_retries() -> None:
+    graph, _, _ = make_graph(
         sufficient=False,
         max_retries=2,
     )
@@ -198,12 +277,14 @@ def test_graph_routes_to_fallback_after_max_retries() -> None:
     )
 
     assert state["retry_count"] == 2
-    assert state["answer"] == "I don't have enough information."
-    assert state["sufficient_context"] is False
+    assert state["answer"] == (
+        "I don't have enough information."
+    )
+    assert state["grounded"] is False
 
 
-def test_graph_routes_to_fallback_when_retries_are_disabled() -> None:
-    graph = make_graph(
+def test_graph_falls_back_when_retries_are_disabled() -> None:
+    graph, _, _ = make_graph(
         sufficient=False,
         max_retries=0,
     )
@@ -215,5 +296,84 @@ def test_graph_routes_to_fallback_when_retries_are_disabled() -> None:
     )
 
     assert state["retry_count"] == 0
-    assert state["answer"] == "I don't have enough information."
-    assert state["sufficient_context"] is False
+    assert state["answer"] == (
+        "I don't have enough information."
+    )
+    assert state["grounded"] is False
+
+
+def test_graph_falls_back_when_generated_answer_is_ungrounded() -> None:
+    graph, generator, grounding_checker = make_graph(
+        sufficient=True,
+        grounded=False,
+    )
+
+    state = graph.invoke(
+        RAGState(
+            query="PostgreSQL indexes",
+        )
+    )
+
+    assert state["answer"] == (
+        "I don't have enough information."
+    )
+    assert state["grounded"] is False
+
+    assert len(generator.calls) == 1
+    assert len(grounding_checker.calls) == 1
+
+
+def test_graph_does_not_run_grounding_without_generation() -> None:
+    graph, generator, grounding_checker = make_graph(
+        sufficient=False,
+        max_retries=0,
+    )
+
+    graph.invoke(
+        RAGState(
+            query="PostgreSQL indexes",
+        )
+    )
+
+    assert len(generator.calls) == 0
+    assert len(grounding_checker.calls) == 0
+
+
+def test_graph_rejects_negative_max_retries() -> None:
+    retrieve_node = RetrieveNode(
+        retriever=FakeRetriever(),
+    )
+
+    rerank_node = RerankNode(
+        reranker=FakeReranker(),
+    )
+
+    grade_node = GradeNode(
+        grader=FakeGrader(),
+    )
+
+    generate_node = GenerateNode(
+        generator=FakeGenerator(),
+    )
+
+    grounding_node = GroundingNode(
+        checker=FakeGroundingChecker(),
+    )
+
+    try:
+        build_rag_graph(
+            retrieve_node=retrieve_node,
+            rerank_node=rerank_node,
+            grade_node=grade_node,
+            generate_node=generate_node,
+            grounding_node=grounding_node,
+            max_retries=-1,
+        )
+    except ValueError as exc:
+        assert str(exc) == (
+            "max_retries cannot be negative."
+        )
+    else:
+        raise AssertionError(
+            "Expected ValueError for negative max_retries."
+        )

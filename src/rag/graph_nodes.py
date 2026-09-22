@@ -88,3 +88,52 @@ class GradeNode:
             "context": context,
             "sufficient_context": sufficient_context,
         }
+
+
+class GenerateNode:
+    """Generates an answer from the selected context."""
+
+    def __init__(self, generator) -> None:
+        self.generator = generator
+
+    def __call__(self, state: RAGState) -> dict:
+        if not state.context:
+            raise ValueError(
+                "Cannot generate an answer without context."
+            )
+
+        result = self.generator.generate(
+            query=state.query,
+            context=state.context,
+        )
+
+        return {
+            "answer": result.answer,
+        }
+
+
+class GroundingNode:
+    """Checks whether the generated answer is supported by context."""
+
+    def __init__(self, checker) -> None:
+        self.checker = checker
+
+    def __call__(self, state: RAGState) -> dict:
+        if not state.answer:
+            raise ValueError(
+                "Cannot check grounding without an answer."
+            )
+
+        if not state.context:
+            raise ValueError(
+                "Cannot check grounding without context."
+            )
+
+        result = self.checker.check(
+            answer=state.answer,
+            context=state.context,
+        )
+
+        return {
+            "grounded": result.grounded,
+        }
