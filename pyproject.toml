@@ -15,6 +15,7 @@ dependencies = [
     "python-dotenv",
     "rank-bm25",
     "sentence-transformers",
+    "numpy",
 ]
 
 [project.optional-dependencies]
