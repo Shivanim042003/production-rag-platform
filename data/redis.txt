@@ -1,0 +1,3 @@
+﻿Redis is an in-memory data store commonly used for caching.
+It supports key-value data structures, fast reads and writes, and expiration.
+Redis is often used to reduce database load and improve application performance.
