@@ -103,7 +103,7 @@ class QwenGroundingScorer:
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
-                max_new_tokens=4,
+                max_new_tokens=8,
                 do_sample=False,
             )
 

@@ -20,8 +20,14 @@ class RetrieveNode:
         self.bm25_k = bm25_k
 
     def __call__(self, state: RAGState) -> dict:
+        query = (
+            state.transformed_queries[-1]
+            if state.transformed_queries
+            else state.query
+        )
+
         results = self.retriever.retrieve(
-            query=state.query,
+            query=query,
             top_k=self.top_k,
             dense_k=self.dense_k,
             bm25_k=self.bm25_k,
@@ -136,4 +142,56 @@ class GroundingNode:
 
         return {
             "grounded": result.grounded,
+        }
+
+
+class QueryTransformNode:
+    """Transforms the user query for retrieval."""
+
+    def __init__(self, transformer) -> None:
+        self.transformer = transformer
+
+    def __call__(self, state: RAGState) -> dict:
+        transformed_query = self.transformer.transform(
+            state.query
+        )
+
+        return {
+            "transformed_queries": [transformed_query],
+        }
+from rag.graph_state import RAGState
+from rag.multi_query_retriever import MultiQueryRetriever
+
+
+class MultiQueryRetrieveNode:
+    """Runs multi-query retrieval and RRF fusion."""
+
+    def __init__(
+        self,
+        retriever: MultiQueryRetriever,
+        top_k: int = 10,
+        dense_k: int = 10,
+        bm25_k: int = 10,
+    ) -> None:
+        self.retriever = retriever
+        self.top_k = top_k
+        self.dense_k = dense_k
+        self.bm25_k = bm25_k
+
+    def __call__(self, state: RAGState) -> dict:
+        query = (
+            state.transformed_queries[-1]
+            if state.transformed_queries
+            else state.query
+        )
+
+        results = self.retriever.retrieve(
+            query=query,
+            top_k=self.top_k,
+            dense_k=self.dense_k,
+            bm25_k=self.bm25_k,
+        )
+
+        return {
+            "candidates": results,
         }
