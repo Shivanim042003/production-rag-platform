@@ -61,3 +61,8 @@ Grounding Check
     |
     v
 Final Answer
+
+## Architecture
+
+![Production RAG Platform Architecture](docs/architecture.png)
+
