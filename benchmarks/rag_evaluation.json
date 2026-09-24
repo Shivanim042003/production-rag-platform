@@ -1,0 +1,70 @@
+[
+  {
+    "query": "What are PostgreSQL indexes used for?",
+    "reference_answer": "PostgreSQL indexes are used to improve query performance by allowing the database to locate relevant rows more efficiently instead of scanning the entire table.",
+    "relevant_chunks": [
+      "postgresql_chunk_001",
+      "postgresql_chunk_002",
+      "postgresql_performance_chunk_001"
+    ]
+  },
+  {
+    "query": "How does PostgreSQL inspect query execution plans?",
+    "reference_answer": "PostgreSQL uses EXPLAIN and EXPLAIN ANALYZE to inspect query execution plans and understand how queries are executed.",
+    "relevant_chunks": [
+      "postgresql_chunk_003",
+      "postgresql_chunk_004",
+      "postgresql_performance_chunk_002"
+    ]
+  },
+  {
+    "query": "How does PostgreSQL use statistics for query planning?",
+    "reference_answer": "PostgreSQL collects statistics about table data and uses them during query planning to estimate costs and select efficient execution plans.",
+    "relevant_chunks": [
+      "postgresql_chunk_003",
+      "postgresql_performance_chunk_001",
+      "postgresql_performance_chunk_003"
+    ]
+  },
+  {
+    "query": "How does PostgreSQL provide concurrency control?",
+    "reference_answer": "PostgreSQL provides concurrency control so that multiple transactions can operate safely while maintaining database consistency.",
+    "relevant_chunks": [
+      "postgresql_chunk_004"
+    ]
+  },
+  {
+    "query": "How does Redis reduce database load?",
+    "reference_answer": "Redis can reduce database load by caching frequently accessed data in memory, allowing applications to serve repeated requests without querying the primary database each time.",
+    "relevant_chunks": [
+      "redis_chunk_001",
+      "redis_chunk_002",
+      "redis_performance_chunk_001"
+    ]
+  },
+  {
+    "query": "How does Redis expiration work?",
+    "reference_answer": "Redis supports key expiration by associating keys with a time-to-live, after which Redis removes the expired keys.",
+    "relevant_chunks": [
+      "redis_chunk_003",
+      "redis_performance_chunk_002",
+      "redis_performance_chunk_003"
+    ]
+  },
+  {
+    "query": "What data structures does Redis support?",
+    "reference_answer": "Redis supports several data structures, including strings, lists, sets, sorted sets, and hashes.",
+    "relevant_chunks": [
+      "redis_chunk_001",
+      "redis_performance_chunk_003"
+    ]
+  },
+  {
+    "query": "What factors affect Redis performance?",
+    "reference_answer": "Redis performance can be affected by factors such as workload characteristics, data structures, memory usage, command patterns, and system resources.",
+    "relevant_chunks": [
+      "redis_performance_chunk_001",
+      "redis_performance_chunk_004"
+    ]
+  }
+]

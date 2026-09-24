@@ -17,6 +17,11 @@ dependencies = [
     "sentence-transformers",
     "numpy",
     "faiss-cpu",
+    "langgraph",
+    "langchain-core",
+    "torch",
+    "transformers",
+    "scikit-learn",
 ]
 
 [project.optional-dependencies]

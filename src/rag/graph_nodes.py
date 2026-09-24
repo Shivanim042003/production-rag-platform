@@ -1,6 +1,8 @@
 ﻿from rag.graph_state import RAGState
 from rag.grader import RelevanceGrader
 from rag.hybrid import HybridRetriever
+from rag.multi_query_retriever import MultiQueryRetriever
+from rag.observability import RAGTrace, StageTimer
 from rag.reranker import Reranker
 
 
@@ -13,11 +15,13 @@ class RetrieveNode:
         top_k: int = 10,
         dense_k: int = 10,
         bm25_k: int = 10,
+        trace: RAGTrace | None = None,
     ) -> None:
         self.retriever = retriever
         self.top_k = top_k
         self.dense_k = dense_k
         self.bm25_k = bm25_k
+        self.trace = trace
 
     def __call__(self, state: RAGState) -> dict:
         query = (
@@ -26,12 +30,21 @@ class RetrieveNode:
             else state.query
         )
 
-        results = self.retriever.retrieve(
-            query=query,
-            top_k=self.top_k,
-            dense_k=self.dense_k,
-            bm25_k=self.bm25_k,
-        )
+        if self.trace is not None:
+            with StageTimer(self.trace, "retrieval"):
+                results = self.retriever.retrieve(
+                    query=query,
+                    top_k=self.top_k,
+                    dense_k=self.dense_k,
+                    bm25_k=self.bm25_k,
+                )
+        else:
+            results = self.retriever.retrieve(
+                query=query,
+                top_k=self.top_k,
+                dense_k=self.dense_k,
+                bm25_k=self.bm25_k,
+            )
 
         return {
             "candidates": results,
@@ -45,16 +58,26 @@ class RerankNode:
         self,
         reranker: Reranker,
         top_k: int = 5,
+        trace: RAGTrace | None = None,
     ) -> None:
         self.reranker = reranker
         self.top_k = top_k
+        self.trace = trace
 
     def __call__(self, state: RAGState) -> dict:
-        results = self.reranker.rerank(
-            query=state.query,
-            results=state.candidates,
-            top_k=self.top_k,
-        )
+        if self.trace is not None:
+            with StageTimer(self.trace, "reranking"):
+                results = self.reranker.rerank(
+                    query=state.query,
+                    results=state.candidates,
+                    top_k=self.top_k,
+                )
+        else:
+            results = self.reranker.rerank(
+                query=state.query,
+                results=state.candidates,
+                top_k=self.top_k,
+            )
 
         return {
             "reranked_results": results,
@@ -68,15 +91,24 @@ class GradeNode:
         self,
         grader: RelevanceGrader,
         min_relevant: int = 1,
+        trace: RAGTrace | None = None,
     ) -> None:
         self.grader = grader
         self.min_relevant = min_relevant
+        self.trace = trace
 
     def __call__(self, state: RAGState) -> dict:
-        graded_results = self.grader.grade_results(
-            query=state.query,
-            results=state.reranked_results,
-        )
+        if self.trace is not None:
+            with StageTimer(self.trace, "grading"):
+                graded_results = self.grader.grade_results(
+                    query=state.query,
+                    results=state.reranked_results,
+                )
+        else:
+            graded_results = self.grader.grade_results(
+                query=state.query,
+                results=state.reranked_results,
+            )
 
         sufficient_context = self.grader.has_sufficient_context(
             graded_results,
@@ -99,8 +131,13 @@ class GradeNode:
 class GenerateNode:
     """Generates an answer from the selected context."""
 
-    def __init__(self, generator) -> None:
+    def __init__(
+        self,
+        generator,
+        trace: RAGTrace | None = None,
+    ) -> None:
         self.generator = generator
+        self.trace = trace
 
     def __call__(self, state: RAGState) -> dict:
         if not state.context:
@@ -108,10 +145,17 @@ class GenerateNode:
                 "Cannot generate an answer without context."
             )
 
-        result = self.generator.generate(
-            query=state.query,
-            context=state.context,
-        )
+        if self.trace is not None:
+            with StageTimer(self.trace, "generation"):
+                result = self.generator.generate(
+                    query=state.query,
+                    context=state.context,
+                )
+        else:
+            result = self.generator.generate(
+                query=state.query,
+                context=state.context,
+            )
 
         return {
             "answer": result.answer,
@@ -121,8 +165,13 @@ class GenerateNode:
 class GroundingNode:
     """Checks whether the generated answer is supported by context."""
 
-    def __init__(self, checker) -> None:
+    def __init__(
+        self,
+        checker,
+        trace: RAGTrace | None = None,
+    ) -> None:
         self.checker = checker
+        self.trace = trace
 
     def __call__(self, state: RAGState) -> dict:
         if not state.answer:
@@ -135,10 +184,17 @@ class GroundingNode:
                 "Cannot check grounding without context."
             )
 
-        result = self.checker.check(
-            answer=state.answer,
-            context=state.context,
-        )
+        if self.trace is not None:
+            with StageTimer(self.trace, "grounding"):
+                result = self.checker.check(
+                    answer=state.answer,
+                    context=state.context,
+                )
+        else:
+            result = self.checker.check(
+                answer=state.answer,
+                context=state.context,
+            )
 
         return {
             "grounded": result.grounded,
@@ -148,19 +204,31 @@ class GroundingNode:
 class QueryTransformNode:
     """Transforms the user query for retrieval."""
 
-    def __init__(self, transformer) -> None:
+    def __init__(
+        self,
+        transformer,
+        trace: RAGTrace | None = None,
+    ) -> None:
         self.transformer = transformer
+        self.trace = trace
 
     def __call__(self, state: RAGState) -> dict:
-        transformed_query = self.transformer.transform(
-            state.query
-        )
+        if self.trace is not None:
+            with StageTimer(
+                self.trace,
+                "query_transform",
+            ):
+                transformed_query = self.transformer.transform(
+                    state.query
+                )
+        else:
+            transformed_query = self.transformer.transform(
+                state.query
+            )
 
         return {
             "transformed_queries": [transformed_query],
         }
-from rag.graph_state import RAGState
-from rag.multi_query_retriever import MultiQueryRetriever
 
 
 class MultiQueryRetrieveNode:
@@ -172,11 +240,13 @@ class MultiQueryRetrieveNode:
         top_k: int = 10,
         dense_k: int = 10,
         bm25_k: int = 10,
+        trace: RAGTrace | None = None,
     ) -> None:
         self.retriever = retriever
         self.top_k = top_k
         self.dense_k = dense_k
         self.bm25_k = bm25_k
+        self.trace = trace
 
     def __call__(self, state: RAGState) -> dict:
         query = (
@@ -185,12 +255,24 @@ class MultiQueryRetrieveNode:
             else state.query
         )
 
-        results = self.retriever.retrieve(
-            query=query,
-            top_k=self.top_k,
-            dense_k=self.dense_k,
-            bm25_k=self.bm25_k,
-        )
+        if self.trace is not None:
+            with StageTimer(
+                self.trace,
+                "multi_query_retrieval",
+            ):
+                results = self.retriever.retrieve(
+                    query=query,
+                    top_k=self.top_k,
+                    dense_k=self.dense_k,
+                    bm25_k=self.bm25_k,
+                )
+        else:
+            results = self.retriever.retrieve(
+                query=query,
+                top_k=self.top_k,
+                dense_k=self.dense_k,
+                bm25_k=self.bm25_k,
+            )
 
         return {
             "candidates": results,
