@@ -1,4 +1,6 @@
-﻿import pytest
+﻿from pathlib import Path
+
+import pytest
 
 from rag.ingestion import TxtLoader, ingest_txt
 from rag.models import RawDocument
@@ -12,7 +14,7 @@ def test_txt_loader_returns_raw_document() -> None:
     assert isinstance(document, RawDocument)
     assert document.document_id == "postgresql"
     assert "PostgreSQL is an open-source relational database system." in document.text
-    assert document.source == r"data\postgresql.txt"
+    assert Path(document.source) == Path("data/postgresql.txt")
     assert document.metadata == {"file_type": "txt"}
 
 
@@ -51,5 +53,8 @@ def test_ingest_txt_returns_chunks() -> None:
 
     assert len(chunks) > 0
     assert all(chunk.document_id == "postgresql" for chunk in chunks)
-    assert all(chunk.source == r"data\postgresql.txt" for chunk in chunks)
+    assert all(
+        Path(chunk.source) == Path("data/postgresql.txt")
+        for chunk in chunks
+    )
     assert all(chunk.metadata == {"file_type": "txt"} for chunk in chunks)
