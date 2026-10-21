@@ -22,6 +22,15 @@ def test_query_endpoint_returns_rag_response(
     mock_rag_service.query.return_value = {
         "query": "What are PostgreSQL indexes used for?",
         "answer": "PostgreSQL indexes improve query performance.",
+        "diagnostics": {
+            "candidate_count": 1,
+            "reranked_count": 1,
+            "relevant_context_count": 1,
+            "retry_count": 0,
+            "grounded": True,
+            "total_duration_ms": 10.0,
+            "stages": [],
+        },
         "grounded": True,
         "sources": [
             {
@@ -120,6 +129,15 @@ def test_stream_endpoint_returns_sse_events(
     mock_rag_service.query.return_value = {
         "query": "What are PostgreSQL indexes used for?",
         "answer": "PostgreSQL indexes improve query performance.",
+        "diagnostics": {
+            "candidate_count": 1,
+            "reranked_count": 1,
+            "relevant_context_count": 1,
+            "retry_count": 0,
+            "grounded": True,
+            "total_duration_ms": 10.0,
+            "stages": [],
+        },
         "grounded": True,
         "sources": [
             {
@@ -162,7 +180,7 @@ def test_readiness_returns_503_when_service_is_unavailable() -> None:
 
     assert response.status_code == 503
     assert response.json() == {
-        "detail": "RAG service is not ready."
+        "detail": "RAG service is still initializing."
     }
 
 

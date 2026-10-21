@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import time
 from pathlib import Path
 from typing import Any
@@ -23,13 +23,13 @@ from rag.local_grader import LocalRelevanceScorer
 from rag.observability import RAGTrace
 from rag.qwen_generator import QwenLocalGenerator
 from rag.qwen_grounding import QwenGroundingScorer
+from rag.qwen_model import QwenModelBundle
 from rag.query_transformer import IdentityQueryTransformer
 from rag.reranker import Reranker
 from rag.vector_store import FaissVectorStore
 
 
 logger = logging.getLogger("rag.service")
-
 
 DATA_PATH = Path("benchmarks/data")
 MODEL_NAME = "Qwen/Qwen2.5-1.5B-Instruct"
@@ -42,23 +42,41 @@ class RAGService:
     """Application service for the production RAG pipeline."""
 
     def __init__(self) -> None:
+        # Stage 1: Load source documents.
+        logger.info("Loading RAG documents")
         self.chunks = self._load_chunks()
+        logger.info(
+            "Documents loaded: %d chunks",
+            len(self.chunks),
+        )
 
+        # Stage 2: Load the embedding model.
+        logger.info("Loading embedding model")
         self.embedding_model = EmbeddingModel()
+        logger.info("Embedding model loaded")
 
+        # Stage 3: Generate document embeddings.
+        logger.info("Embedding document chunks")
         embeddings = self.embedding_model.embed_documents(
             self.chunks
         )
+        logger.info(
+            "Document embeddings generated: %s",
+            embeddings.shape,
+        )
 
+        # Stage 4: Build the vector store and retrievers.
+        logger.info("Building FAISS vector store")
         self.vector_store = FaissVectorStore(
             dimension=self.embedding_model.dimension
         )
-
         self.vector_store.add(
             self.chunks,
             embeddings,
         )
+        logger.info("FAISS vector store built")
 
+        logger.info("Building BM25 retriever")
         self.bm25_retriever = BM25Retriever(
             self.chunks
         )
@@ -68,8 +86,12 @@ class RAGService:
             vector_store=self.vector_store,
             bm25_retriever=self.bm25_retriever,
         )
+        logger.info("Hybrid retriever built")
 
+        # Stage 5: Load the cross-encoder.
+        logger.info("Loading cross-encoder")
         self.cross_encoder = CrossEncoderScorer()
+        logger.info("Cross-encoder loaded")
 
         self.reranker = Reranker(
             scorer=self.cross_encoder,
@@ -83,24 +105,42 @@ class RAGService:
         self.relevance_grader = RelevanceGrader(
             scorer=self.relevance_scorer,
         )
+        logger.info(
+            "Reranker and relevance grader initialized"
+        )
+
+        # Stage 6: Load Qwen once and share it.
+        logger.info("Loading shared Qwen model")
+        self.qwen_model = QwenModelBundle(
+            model_name=MODEL_NAME,
+        )
+        logger.info("Shared Qwen model loaded")
 
         self.generator = QwenLocalGenerator(
             model_name=MODEL_NAME,
-            max_new_tokens=128,
+            max_new_tokens=96,
+            model_bundle=self.qwen_model,
         )
+        logger.info("Qwen answer generator initialized")
 
         self.grounding_scorer = QwenGroundingScorer(
             model_name=MODEL_NAME,
+            model_bundle=self.qwen_model,
         )
 
         self.grounding_checker = GroundingChecker(
             scorer=self.grounding_scorer,
         )
+        logger.info("Grounding checker initialized")
+
+        logger.info("RAG service initialization complete")
 
     def _load_chunks(self):
+        """Load and chunk all benchmark text documents."""
         chunks = []
 
         for path in sorted(DATA_PATH.glob("*.txt")):
+            logger.info("Loading document: %s", path)
             chunks.extend(
                 ingest_txt(
                     path,
@@ -111,7 +151,7 @@ class RAGService:
 
         if not chunks:
             raise RuntimeError(
-                "No RAG documents were found."
+                f"No RAG documents found in {DATA_PATH.resolve()}."
             )
 
         return chunks
@@ -120,6 +160,7 @@ class RAGService:
         self,
         trace: RAGTrace,
     ):
+        """Construct the graph for one query."""
         retrieve_node = RetrieveNode(
             retriever=self.hybrid_retriever,
             top_k=10,
@@ -170,21 +211,13 @@ class RAGService:
         question: str,
     ) -> dict[str, Any]:
         """Run a question through the RAG graph."""
-
         if not question.strip():
-            raise ValueError(
-                "Question cannot be empty."
-            )
+            raise ValueError("Question cannot be empty.")
 
-        trace = RAGTrace(
-            query=question,
-        )
-
+        trace = RAGTrace(query=question)
         start_time = time.perf_counter()
 
-        graph = self._build_graph(
-            trace=trace,
-        )
+        graph = self._build_graph(trace=trace)
 
         initial_state = {
             "query": question,
@@ -199,23 +232,18 @@ class RAGService:
             "sufficient_context": False,
         }
 
-        final_state = graph.invoke(
-            initial_state
-        )
+        final_state = graph.invoke(initial_state)
 
         total_duration_ms = (
             time.perf_counter() - start_time
         ) * 1000
 
-        trace.finish(
-            total_duration_ms=total_duration_ms,
-        )
+        trace.finish(total_duration_ms=total_duration_ms)
 
         reranked_results = final_state.get(
             "reranked_results",
             [],
         )
-
         graded_results = final_state.get(
             "graded_results",
             [],
@@ -230,24 +258,15 @@ class RAGService:
         trace.metadata.update(
             {
                 "candidate_count": len(
-                    final_state.get(
-                        "candidates",
-                        [],
-                    )
+                    final_state.get("candidates", [])
                 ),
-                "reranked_count": len(
-                    reranked_results
-                ),
+                "reranked_count": len(reranked_results),
                 "relevant_context_count": relevant_count,
                 "retry_count": final_state.get(
-                    "retry_count",
-                    0,
+                    "retry_count", 0
                 ),
                 "grounded": bool(
-                    final_state.get(
-                        "grounded",
-                        False,
-                    )
+                    final_state.get("grounded", False)
                 ),
             }
         )
@@ -257,15 +276,11 @@ class RAGService:
             extra={
                 "rag_trace": {
                     "query": trace.query,
-                    "total_duration_ms": (
-                        trace.total_duration_ms
-                    ),
+                    "total_duration_ms": trace.total_duration_ms,
                     "stages": [
                         {
                             "name": stage.name,
-                            "duration_ms": (
-                                stage.duration_ms
-                            ),
+                            "duration_ms": stage.duration_ms,
                         }
                         for stage in trace.stages
                     ],
@@ -284,15 +299,20 @@ class RAGService:
 
         return {
             "query": question,
-            "answer": final_state.get(
-                "answer",
-                "",
-            ),
+            "answer": final_state.get("answer", ""),
             "grounded": bool(
-                final_state.get(
-                    "grounded",
-                    False,
-                )
+                final_state.get("grounded", False)
             ),
             "sources": sources,
+            "diagnostics": {
+                **trace.metadata,
+                "total_duration_ms": trace.total_duration_ms,
+                "stages": [
+                    {
+                        "name": stage.name,
+                        "duration_ms": stage.duration_ms,
+                    }
+                    for stage in trace.stages
+                ],
+            },
         }

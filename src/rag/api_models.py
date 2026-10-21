@@ -1,3 +1,4 @@
+
 from pydantic import BaseModel, Field
 
 
@@ -15,11 +16,27 @@ class RAGSource(BaseModel):
     score: float
 
 
+class RAGStageDiagnostic(BaseModel):
+    name: str
+    duration_ms: float
+
+
+class RAGDiagnostics(BaseModel):
+    candidate_count: int
+    reranked_count: int
+    relevant_context_count: int
+    retry_count: int
+    grounded: bool
+    total_duration_ms: float
+    stages: list[RAGStageDiagnostic]
+
+
 class RAGQueryResponse(BaseModel):
     query: str
     answer: str
     grounded: bool
     sources: list[RAGSource]
+    diagnostics: RAGDiagnostics
 
 
 class RAGStreamEvent(BaseModel):
