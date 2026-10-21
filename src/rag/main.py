@@ -2,6 +2,7 @@
 import asyncio
 import json
 import logging
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, suppress
 from typing import Any
@@ -15,6 +16,12 @@ from rag.rag_service import RAGService
 
 
 logger = logging.getLogger("rag.api")
+
+CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")
+    if origin.strip()
+]
 
 rag_service: RAGService | None = None
 initialization_error: str | None = None
@@ -73,7 +80,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

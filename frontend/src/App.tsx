@@ -1,35 +1,65 @@
 import { useState } from "react";
 import "./App.css";
 
+const API_URL: string =
+  import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+
+const EXAMPLE_QUESTIONS = [
+  "What are PostgreSQL indexes used for?",
+  "How does Redis key expiration work?",
+  "How does PostgreSQL use statistics for query planning?",
+  "What factors affect Redis performance?",
+];
+
 type Source = {
   chunk_id: string;
   score: number;
 };
 
 type StreamEvent =
-  | {
-      type: "status";
-      message: string;
+  | { type: "status"; message: string }
+  | { type: "token"; text: string }
+  | { type: "answer"; answer: string }
+  | { type: "grounding"; grounded: boolean }
+  | { type: "sources"; sources: Source[] }
+  | { type: "complete" }
+  | { type: "error"; message: string };
+
+type Timings = {
+  firstTokenMs: number | null;
+  totalMs: number;
+};
+
+function parseEvents(buffer: string): {
+  events: StreamEvent[];
+  rest: string;
+} {
+  const blocks = buffer.split("\n\n");
+  const rest = blocks.pop() ?? "";
+  const events: StreamEvent[] = [];
+
+  for (const block of blocks) {
+    const line = block
+      .split("\n")
+      .find((item) => item.startsWith("data:"));
+
+    if (!line) {
+      continue;
     }
-  | {
-      type: "answer";
-      answer: string;
+
+    const json = line.slice("data:".length).trim();
+
+    if (json) {
+      events.push(JSON.parse(json) as StreamEvent);
     }
-  | {
-      type: "grounding";
-      grounded: boolean;
-    }
-  | {
-      type: "sources";
-      sources: Source[];
-    }
-  | {
-      type: "complete";
-    }
-  | {
-      type: "error";
-      message: string;
-    };
+  }
+
+  return { events, rest };
+}
+
+function formatSeconds(ms: number | null): string {
+  return ms === null ? "n/a" : `${(ms / 1000).toFixed(1)} s`;
+}
 
 function App() {
   const [query, setQuery] = useState("");
@@ -39,30 +69,34 @@ function App() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [timings, setTimings] = useState<Timings | null>(null);
 
-  const askQuestion = async () => {
-    if (!query.trim()) {
+  const askQuestion = async (question: string) => {
+    const text = question.trim();
+
+    if (!text || loading) {
       return;
     }
 
+    setQuery(text);
     setLoading(true);
     setError("");
     setAnswer("");
     setSources([]);
     setGrounded(null);
+    setTimings(null);
     setStatus("Connecting...");
+
+    const startedAt = performance.now();
+    let firstTokenMs: number | null = null;
 
     try {
       const response = await fetch(
-        "http://localhost:8000/api/v1/rag/query/stream",
+        `${API_URL}/api/v1/rag/query/stream`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            query,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: text }),
         },
       );
 
@@ -78,7 +112,6 @@ function App() {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-
       let buffer = "";
 
       while (true) {
@@ -88,66 +121,59 @@ function App() {
           break;
         }
 
-        buffer += decoder.decode(value, {
-          stream: true,
-        });
+        buffer += decoder.decode(value, { stream: true });
 
-        const events = buffer.split("\n\n");
+        const parsed = parseEvents(buffer);
+        buffer = parsed.rest;
 
-        buffer = events.pop() ?? "";
-
-        for (const event of events) {
-          const line = event
-            .split("\n")
-            .find((item) => item.startsWith("data:"));
-
-          if (!line) {
-            continue;
-          }
-
-          const jsonData = line
-            .slice("data:".length)
-            .trim();
-
-          if (!jsonData) {
-            continue;
-          }
-
-          const streamEvent: StreamEvent =
-            JSON.parse(jsonData);
-
-          switch (streamEvent.type) {
+        for (const event of parsed.events) {
+          switch (event.type) {
             case "status":
-              setStatus(streamEvent.message);
+              setStatus(event.message);
+              break;
+
+            case "token":
+              if (firstTokenMs === null) {
+                firstTokenMs = performance.now() - startedAt;
+                setStatus("Generating answer...");
+              }
+              setAnswer((current) => current + event.text);
               break;
 
             case "answer":
-              setAnswer(streamEvent.answer);
-              setStatus("Answer generated.");
+              // Authoritative answer: replaces the streamed text
+              // (for example with the fallback when grounding fails).
+              setAnswer(event.answer);
               break;
 
             case "grounding":
-              setGrounded(streamEvent.grounded);
+              setGrounded(event.grounded);
+              setStatus(
+                event.grounded
+                  ? "Answer verified against the sources."
+                  : "The answer could not be verified.",
+              );
               break;
 
             case "sources":
-              setSources(streamEvent.sources);
+              setSources(event.sources);
               break;
 
             case "complete":
-              setStatus("Complete.");
+              setTimings({
+                firstTokenMs,
+                totalMs: performance.now() - startedAt,
+              });
               break;
 
             case "error":
-              throw new Error(streamEvent.message);
+              throw new Error(event.message);
           }
         }
       }
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong.",
+        err instanceof Error ? err.message : "Something went wrong.",
       );
       setStatus("");
     } finally {
@@ -161,22 +187,30 @@ function App() {
         <div>
           <h1>Production RAG Platform</h1>
           <p>
-            Hybrid retrieval · Reranking · Grounded generation
+            Hybrid retrieval &middot; Reranking &middot; Grounded
+            generation
           </p>
         </div>
       </header>
 
       <main className="main">
         <section className="query-section">
-          <label htmlFor="query">
-            Ask a question
-          </label>
+          <label htmlFor="query">Ask a question</label>
 
           <textarea
             id="query"
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
+            }}
+            onKeyDown={(event) => {
+              if (
+                event.key === "Enter" &&
+                (event.ctrlKey || event.metaKey)
+              ) {
+                event.preventDefault();
+                void askQuestion(query);
+              }
             }}
             placeholder="What are PostgreSQL indexes used for?"
             rows={4}
@@ -185,24 +219,36 @@ function App() {
 
           <button
             type="button"
-            onClick={askQuestion}
+            onClick={() => {
+              void askQuestion(query);
+            }}
             disabled={loading || !query.trim()}
           >
             {loading ? "Processing..." : "Ask"}
           </button>
 
-          {status && (
-            <p className="status">
-              {status}
-            </p>
-          )}
+          <p className="hint">Ctrl+Enter to submit</p>
+
+          <div className="examples">
+            {EXAMPLE_QUESTIONS.map((example) => (
+              <button
+                type="button"
+                key={example}
+                className="example"
+                disabled={loading}
+                onClick={() => {
+                  void askQuestion(example);
+                }}
+              >
+                {example}
+              </button>
+            ))}
+          </div>
+
+          {status && <p className="status">{status}</p>}
         </section>
 
-        {error && (
-          <section className="error">
-            {error}
-          </section>
-        )}
+        {error && <section className="error">{error}</section>}
 
         {answer && (
           <section className="answer-section">
@@ -212,37 +258,40 @@ function App() {
               {grounded !== null && (
                 <span
                   className={
-                    grounded
-                      ? "badge grounded"
-                      : "badge ungrounded"
+                    grounded ? "badge grounded" : "badge ungrounded"
                   }
                 >
                   {grounded
-                    ? "✓ Grounded"
-                    : "⚠ Not grounded"}
+                    ? "\u2713 Grounded"
+                    : "\u26A0 Not grounded"}
                 </span>
               )}
             </div>
 
             <div className="answer">
               {answer}
+              {loading && (
+                <span className="cursor" aria-hidden="true" />
+              )}
             </div>
+
+            {timings && (
+              <p className="timings">
+                First token {formatSeconds(timings.firstTokenMs)}{" "}
+                &middot; Total {formatSeconds(timings.totalMs)}
+              </p>
+            )}
           </section>
         )}
 
         {sources.length > 0 && (
           <section className="sources-section">
-            <h2>Retrieved Sources</h2>
+            <h2>Sources used</h2>
 
             <div className="sources">
               {sources.map((source) => (
-                <div
-                  className="source"
-                  key={source.chunk_id}
-                >
-                  <div className="source-id">
-                    {source.chunk_id}
-                  </div>
+                <div className="source" key={source.chunk_id}>
+                  <div className="source-id">{source.chunk_id}</div>
 
                   <div className="source-score">
                     Score: {source.score.toFixed(4)}
