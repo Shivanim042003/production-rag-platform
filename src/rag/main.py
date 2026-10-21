@@ -3,6 +3,7 @@ import asyncio
 import json
 import logging
 import os
+import threading
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, suppress
 from typing import Any
@@ -22,6 +23,10 @@ CORS_ORIGINS = [
     for origin in os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")
     if origin.strip()
 ]
+
+class GenerationCancelled(Exception):
+    """Raised inside generation when the client has disconnected."""
+
 
 rag_service: RAGService | None = None
 initialization_error: str | None = None
@@ -171,10 +176,13 @@ async def rag_event_stream(
     })
 
     loop = asyncio.get_running_loop()
+    cancelled = threading.Event()
     token_queue: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue()
 
     def on_token(text: str) -> None:
         # Runs in the worker thread while the model generates.
+        if cancelled.is_set():
+            raise GenerationCancelled
         loop.call_soon_threadsafe(
             token_queue.put_nowait,
             {"type": "token", "text": text},
@@ -186,9 +194,12 @@ async def rag_event_stream(
         task = asyncio.create_task(
             asyncio.to_thread(service.query, query, on_token)
         )
-        task.add_done_callback(
-            lambda _: token_queue.put_nowait(None)
-        )
+        def finish(done: "asyncio.Future[Any]") -> None:
+            if not done.cancelled():
+                done.exception()  # mark the exception as retrieved
+            token_queue.put_nowait(None)
+
+        task.add_done_callback(finish)
 
         while True:
             event = await token_queue.get()
@@ -232,6 +243,10 @@ async def rag_event_stream(
             "type": "error",
             "message": "RAG query failed.",
         })
+
+    finally:
+        # Also runs when the client disconnects mid-stream.
+        cancelled.set()
 
 
 @app.post("/api/v1/rag/query/stream")

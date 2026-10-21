@@ -1,12 +1,29 @@
 from collections.abc import Callable
-from threading import Thread
+from threading import Event, Thread
 
 import torch
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
+    StoppingCriteria,
+    StoppingCriteriaList,
     TextIteratorStreamer,
 )
+
+
+class _StopWhenSet(StoppingCriteria):
+    """Stop generation once the given event is set."""
+
+    def __init__(self, event: Event) -> None:
+        self.event = event
+
+    def __call__(self, input_ids, scores, **kwargs):
+        return torch.full(
+            (input_ids.shape[0],),
+            self.event.is_set(),
+            dtype=torch.bool,
+            device=input_ids.device,
+        )
 
 
 class QwenModelBundle:
@@ -99,6 +116,7 @@ class QwenModelBundle:
             skip_special_tokens=True,
         )
         errors: list[BaseException] = []
+        stop = Event()
 
         def run() -> None:
             try:
@@ -109,6 +127,9 @@ class QwenModelBundle:
                         max_new_tokens=max_new_tokens,
                         do_sample=False,
                         streamer=streamer,
+                        stopping_criteria=StoppingCriteriaList(
+                            [_StopWhenSet(stop)]
+                        ),
                     )
             except BaseException as exc:
                 errors.append(exc)
@@ -119,12 +140,23 @@ class QwenModelBundle:
         worker.start()
 
         pieces: list[str] = []
+        callback_error: BaseException | None = None
         for piece in streamer:
             if piece:
                 pieces.append(piece)
-                on_token(piece)
+                try:
+                    on_token(piece)
+                except BaseException as exc:
+                    # The consumer gave up (for example the client
+                    # disconnected): stop generating after this token.
+                    callback_error = exc
+                    stop.set()
+                    break
 
         worker.join()
+
+        if callback_error is not None:
+            raise callback_error
 
         if errors:
             raise errors[0]
