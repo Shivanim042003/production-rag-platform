@@ -1,6 +1,8 @@
+
 import json
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,14 +16,14 @@ rag_service: RAGService | None = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     global rag_service
 
-    rag_service = RAGService()
-
-    yield
-
-    rag_service = None
+    try:
+        rag_service = RAGService()
+        yield
+    finally:
+        rag_service = None
 
 
 app = FastAPI(
@@ -34,9 +36,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-    ],
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -45,7 +45,20 @@ app.add_middleware(
 
 @app.get("/health")
 def health() -> dict[str, str]:
+    """Check whether the application process is responding."""
     return {"status": "ok"}
+
+
+@app.get("/ready")
+def readiness() -> dict[str, str]:
+    """Check whether the RAG service has initialized."""
+    if rag_service is None:
+        raise HTTPException(
+            status_code=503,
+            detail="RAG service is not ready.",
+        )
+
+    return {"status": "ready"}
 
 
 @app.post(
@@ -62,13 +75,8 @@ def query_rag(
         )
 
     try:
-        result = rag_service.query(
-            request.query
-        )
-
-        return RAGQueryResponse(
-            **result
-        )
+        result = rag_service.query(request.query)
+        return RAGQueryResponse(**result)
 
     except ValueError as exc:
         raise HTTPException(
@@ -86,106 +94,57 @@ def query_rag(
 async def rag_event_stream(
     query: str,
 ) -> AsyncGenerator[str, None]:
-    """Stream a RAG response using Server-Sent Events."""
+    """Stream RAG response events using Server-Sent Events."""
 
-    yield (
-        "data: "
-        + json.dumps(
-            {
-                "type": "status",
-                "message": "Processing query...",
-            }
-        )
-        + "\n\n"
-    )
+    def encode_event(event: dict[str, Any]) -> str:
+        return f"data: {json.dumps(event)}\n\n"
+
+    yield encode_event({
+        "type": "status",
+        "message": "Processing query...",
+    })
 
     if rag_service is None:
-        yield (
-            "data: "
-            + json.dumps(
-                {
-                    "type": "error",
-                    "message": "RAG service is not ready.",
-                }
-            )
-            + "\n\n"
-        )
+        yield encode_event({
+            "type": "error",
+            "message": "RAG service is not ready.",
+        })
         return
 
     try:
         result = rag_service.query(query)
 
-        yield (
-            "data: "
-            + json.dumps(
-                {
-                    "type": "answer",
-                    "answer": result["answer"],
-                }
-            )
-            + "\n\n"
-        )
+        yield encode_event({
+            "type": "answer",
+            "answer": result["answer"],
+        })
 
-        yield (
-            "data: "
-            + json.dumps(
-                {
-                    "type": "grounding",
-                    "grounded": result["grounded"],
-                }
-            )
-            + "\n\n"
-        )
+        yield encode_event({
+            "type": "grounding",
+            "grounded": result["grounded"],
+        })
 
-        yield (
-            "data: "
-            + json.dumps(
-                {
-                    "type": "sources",
-                    "sources": result["sources"],
-                }
-            )
-            + "\n\n"
-        )
+        yield encode_event({
+            "type": "sources",
+            "sources": result["sources"],
+        })
 
-        yield (
-            "data: "
-            + json.dumps(
-                {
-                    "type": "complete",
-                }
-            )
-            + "\n\n"
-        )
+        yield encode_event({"type": "complete"})
 
     except ValueError as exc:
-        yield (
-            "data: "
-            + json.dumps(
-                {
-                    "type": "error",
-                    "message": str(exc),
-                }
-            )
-            + "\n\n"
-        )
+        yield encode_event({
+            "type": "error",
+            "message": str(exc),
+        })
 
     except Exception:
-        yield (
-            "data: "
-            + json.dumps(
-                {
-                    "type": "error",
-                    "message": "RAG query failed.",
-                }
-            )
-            + "\n\n"
-        )
+        yield encode_event({
+            "type": "error",
+            "message": "RAG query failed.",
+        })
 
 
-@app.post(
-    "/api/v1/rag/query/stream",
-)
+@app.post("/api/v1/rag/query/stream")
 async def stream_rag(
     request: RAGQueryRequest,
 ) -> StreamingResponse:

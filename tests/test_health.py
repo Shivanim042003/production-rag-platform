@@ -155,3 +155,22 @@ def test_stream_endpoint_returns_sse_events(
     mock_rag_service.query.assert_called_once_with(
         "What are PostgreSQL indexes used for?"
     )
+
+@patch("rag.main.rag_service", None)
+def test_readiness_returns_503_when_service_is_unavailable() -> None:
+    response = client.get("/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": "RAG service is not ready."
+    }
+
+
+@patch("rag.main.rag_service")
+def test_readiness_returns_200_when_service_is_available(
+    mock_rag_service: MagicMock,
+) -> None:
+    response = client.get("/ready")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ready"}
