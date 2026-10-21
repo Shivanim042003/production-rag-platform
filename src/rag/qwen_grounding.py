@@ -1,19 +1,19 @@
-﻿import re
-
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+﻿
+import re
 
 from rag.grounding import GroundingResult
+from rag.qwen_model import QwenModelBundle
 
 
 class QwenGroundingScorer:
-    """Checks whether an answer is supported by context using Qwen."""
+    """Check whether an answer is supported by its context."""
 
     def __init__(
         self,
         model_name: str = "Qwen/Qwen2.5-1.5B-Instruct",
         device: str | None = None,
         threshold: float = 0.5,
+        model_bundle: QwenModelBundle | None = None,
     ) -> None:
         if not 0.0 <= threshold <= 1.0:
             raise ValueError(
@@ -23,26 +23,14 @@ class QwenGroundingScorer:
         self.model_name = model_name
         self.threshold = threshold
 
-        if device is None:
-            device = (
-                "cuda"
-                if torch.cuda.is_available()
-                else "cpu"
+        self.model_bundle = (
+            model_bundle
+            if model_bundle is not None
+            else QwenModelBundle(
+                model_name=model_name,
+                device=device,
             )
-
-        self.device = device
-
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            model_name
         )
-
-        self.model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            dtype=torch.float32,
-        )
-
-        self.model.to(self.device)
-        self.model.eval()
 
     def score(
         self,
@@ -77,51 +65,20 @@ class QwenGroundingScorer:
             {
                 "role": "user",
                 "content": (
-                    f"<CONTEXT>\n"
-                    f"{formatted_context}\n"
-                    f"</CONTEXT>\n\n"
-                    f"<ANSWER>\n"
-                    f"{answer}\n"
-                    f"</ANSWER>"
+                    f"<CONTEXT>\n{formatted_context}\n</CONTEXT>\n\n"
+                    f"<ANSWER>\n{answer}\n</ANSWER>"
                 ),
             },
         ]
 
-        inputs = self.tokenizer.apply_chat_template(
+        decision = self.model_bundle.generate_tokens(
             messages,
-            add_generation_prompt=True,
-            tokenize=True,
-            return_dict=True,
-            return_tensors="pt",
+            max_new_tokens=8,
         )
 
-        inputs = {
-            key: value.to(self.device)
-            for key, value in inputs.items()
-        }
-
-        with torch.no_grad():
-            outputs = self.model.generate(
-                **inputs,
-                max_new_tokens=8,
-                do_sample=False,
-            )
-
-        prompt_length = inputs["input_ids"].shape[-1]
-
-        generated_ids = outputs[0][prompt_length:]
-
-        decision = self.tokenizer.decode(
-            generated_ids,
-            skip_special_tokens=True,
-        ).strip()
-
-        normalized = decision.upper()
-
-        # Accept a few safe variants produced by small local models.
         match = re.search(
             r"\b(YES|NO)\b",
-            normalized,
+            decision.upper(),
         )
 
         if match is None:
@@ -139,8 +96,7 @@ class QwenGroundingScorer:
                 "Qwen judged the answer to be supported "
                 "by the context."
                 if grounded
-                else
-                "Qwen judged the answer to be unsupported "
+                else "Qwen judged the answer to be unsupported "
                 "by the context."
             ),
         )

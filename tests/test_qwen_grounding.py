@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 import torch
 
 from rag.qwen_grounding import QwenGroundingScorer
@@ -75,16 +75,16 @@ def make_scorer(
             assert kwargs["dtype"] == torch.float32
             return model
 
-    import rag.qwen_grounding as qwen_grounding
+    import rag.qwen_model as qwen_model
 
     monkeypatch.setattr(
-        qwen_grounding,
+        qwen_model,
         "AutoTokenizer",
         FakeTokenizerFactory,
     )
 
     monkeypatch.setattr(
-        qwen_grounding,
+        qwen_model,
         "AutoModelForCausalLM",
         FakeModelFactory,
     )
@@ -105,10 +105,10 @@ def test_qwen_grounding_initializes_model(monkeypatch) -> None:
     )
 
     assert scorer.model_name == "test-model"
-    assert scorer.device == "cpu"
+    assert scorer.model_bundle.device == "cpu"
     assert scorer.threshold == 0.5
-    assert scorer.tokenizer is tokenizer
-    assert scorer.model is model
+    assert scorer.model_bundle.tokenizer is tokenizer
+    assert scorer.model_bundle.model is model
     assert model.device == "cpu"
     assert model.eval_called is True
 

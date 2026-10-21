@@ -1,18 +1,18 @@
-﻿import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
-
-from rag.generator import GenerationResult
+﻿
 from rag.generation_prompt import build_generation_prompt
+from rag.generator import GenerationResult
+from rag.qwen_model import QwenModelBundle
 
 
 class QwenLocalGenerator:
-    """Generates RAG answers using Qwen2.5-1.5B-Instruct locally."""
+    """Generate RAG answers using a local Qwen model."""
 
     def __init__(
         self,
         model_name: str = "Qwen/Qwen2.5-1.5B-Instruct",
         device: str | None = None,
         max_new_tokens: int = 128,
+        model_bundle: QwenModelBundle | None = None,
     ) -> None:
         if max_new_tokens <= 0:
             raise ValueError(
@@ -22,22 +22,14 @@ class QwenLocalGenerator:
         self.model_name = model_name
         self.max_new_tokens = max_new_tokens
 
-        if device is None:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-
-        self.device = device
-
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            model_name
+        self.model_bundle = (
+            model_bundle
+            if model_bundle is not None
+            else QwenModelBundle(
+                model_name=model_name,
+                device=device,
+            )
         )
-
-        self.model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            dtype=torch.float32,
-        )
-
-        self.model.to(self.device)
-        self.model.eval()
 
     def generate(
         self,
@@ -65,34 +57,10 @@ class QwenLocalGenerator:
             },
         ]
 
-        inputs = self.tokenizer.apply_chat_template(
+        answer = self.model_bundle.generate_tokens(
             messages,
-            add_generation_prompt=True,
-            tokenize=True,
-            return_dict=True,
-            return_tensors="pt",
+            max_new_tokens=self.max_new_tokens,
         )
-
-        inputs = {
-            key: value.to(self.device)
-            for key, value in inputs.items()
-        }
-
-        with torch.no_grad():
-            outputs = self.model.generate(
-                **inputs,
-                max_new_tokens=self.max_new_tokens,
-                do_sample=False,
-            )
-
-        prompt_length = inputs["input_ids"].shape[-1]
-
-        generated_ids = outputs[0][prompt_length:]
-
-        answer = self.tokenizer.decode(
-            generated_ids,
-            skip_special_tokens=True,
-        ).strip()
 
         if not answer:
             raise RuntimeError(

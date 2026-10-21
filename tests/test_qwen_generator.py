@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 import torch
 
 from rag.qwen_generator import QwenLocalGenerator
@@ -74,16 +74,16 @@ def make_generator(monkeypatch):
             assert kwargs["dtype"] == torch.float32
             return model
 
-    import rag.qwen_generator as qwen_generator
+    import rag.qwen_model as qwen_model
 
     monkeypatch.setattr(
-        qwen_generator,
+        qwen_model,
         "AutoTokenizer",
         FakeTokenizerFactory,
     )
 
     monkeypatch.setattr(
-        qwen_generator,
+        qwen_model,
         "AutoModelForCausalLM",
         FakeModelFactory,
     )
@@ -101,10 +101,10 @@ def test_qwen_generator_initializes_model(monkeypatch) -> None:
     generator, tokenizer, model = make_generator(monkeypatch)
 
     assert generator.model_name == "test-model"
-    assert generator.device == "cpu"
+    assert generator.model_bundle.device == "cpu"
     assert generator.max_new_tokens == 64
-    assert generator.tokenizer is tokenizer
-    assert generator.model is model
+    assert generator.model_bundle.tokenizer is tokenizer
+    assert generator.model_bundle.model is model
     assert model.device == "cpu"
     assert model.eval_called is True
 
