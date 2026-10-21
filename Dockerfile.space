@@ -1,0 +1,31 @@
+FROM node:22-alpine AS ui
+WORKDIR /ui
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+# "." makes the UI call the API on its own origin.
+ENV VITE_API_URL=.
+RUN npm run build
+
+FROM python:3.11-slim
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    HF_HOME=/home/user/.cache/huggingface \
+    STATIC_DIR=/app/static
+RUN useradd -m -u 1000 user
+WORKDIR /app
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
+COPY pyproject.toml README.md ./
+RUN python -c "import tomllib; open('/tmp/requirements.txt', 'w').write('\n'.join(tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']))" \
+    && pip install -r /tmp/requirements.txt
+COPY src ./src
+COPY benchmarks ./benchmarks
+RUN pip install --no-deps .
+# Bake the models in: free Spaces do not keep disk between restarts.
+RUN python -c "from huggingface_hub import snapshot_download as d; [d(m) for m in ['Qwen/Qwen2.5-1.5B-Instruct', 'sentence-transformers/all-MiniLM-L6-v2', 'cross-encoder/ms-marco-MiniLM-L-6-v2']]" \
+    && chown -R user:user /home/user
+COPY --from=ui /ui/dist /app/static
+USER user
+EXPOSE 7860
+CMD ["uvicorn", "rag.main:app", "--host", "0.0.0.0", "--port", "7860"]

@@ -11,6 +11,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
 
 from rag.api_models import RAGQueryRequest, RAGQueryResponse
 from rag.rag_service import RAGService
@@ -261,3 +262,10 @@ async def stream_rag(
             "Connection": "keep-alive",
         },
     )
+
+
+# Serve the built UI from the same origin when STATIC_DIR is set
+# (single-container deployments). API routes above take precedence.
+STATIC_DIR = os.environ.get("STATIC_DIR")
+if STATIC_DIR and os.path.isdir(STATIC_DIR):
+    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="ui")
