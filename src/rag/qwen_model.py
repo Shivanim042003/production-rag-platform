@@ -1,8 +1,12 @@
-﻿
-from typing import Any
+﻿from collections.abc import Callable
+from threading import Thread
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    TextIteratorStreamer,
+)
 
 
 class QwenModelBundle:
@@ -39,8 +43,9 @@ class QwenModelBundle:
         self,
         messages: list[dict[str, str]],
         max_new_tokens: int,
+        on_token: Callable[[str], None] | None = None,
     ) -> str:
-        """Generate text using the shared model."""
+        """Generate text, optionally streaming pieces to on_token."""
         if max_new_tokens <= 0:
             raise ValueError(
                 "max_new_tokens must be greater than zero."
@@ -59,6 +64,13 @@ class QwenModelBundle:
             for key, value in inputs.items()
         }
 
+        if on_token is not None:
+            return self._generate_streaming(
+                inputs,
+                max_new_tokens,
+                on_token,
+            )
+
         with torch.inference_mode():
             outputs = self.model.generate(
                 **inputs,
@@ -74,3 +86,47 @@ class QwenModelBundle:
             skip_special_tokens=True,
         ).strip()
 
+    def _generate_streaming(
+        self,
+        inputs: dict,
+        max_new_tokens: int,
+        on_token: Callable[[str], None],
+    ) -> str:
+        """Run generation in a worker thread and relay text pieces."""
+        streamer = TextIteratorStreamer(
+            self.tokenizer,
+            skip_prompt=True,
+            skip_special_tokens=True,
+        )
+        errors: list[BaseException] = []
+
+        def run() -> None:
+            try:
+                # inference_mode is thread-local, so enter it here.
+                with torch.inference_mode():
+                    self.model.generate(
+                        **inputs,
+                        max_new_tokens=max_new_tokens,
+                        do_sample=False,
+                        streamer=streamer,
+                    )
+            except BaseException as exc:
+                errors.append(exc)
+                # Unblock the consuming loop below.
+                streamer.end()
+
+        worker = Thread(target=run, daemon=True)
+        worker.start()
+
+        pieces: list[str] = []
+        for piece in streamer:
+            if piece:
+                pieces.append(piece)
+                on_token(piece)
+
+        worker.join()
+
+        if errors:
+            raise errors[0]
+
+        return "".join(pieces).strip()

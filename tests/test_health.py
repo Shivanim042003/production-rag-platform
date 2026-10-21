@@ -170,7 +170,8 @@ def test_stream_endpoint_returns_sse_events(
 
     assert "PostgreSQL indexes improve query performance." in body
 
-    mock_rag_service.query.assert_called_once_with(
+    mock_rag_service.query.assert_called_once()
+    assert mock_rag_service.query.call_args.args[0] == (
         "What are PostgreSQL indexes used for?"
     )
 

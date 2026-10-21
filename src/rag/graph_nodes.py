@@ -1,4 +1,6 @@
-﻿from rag.graph_state import RAGState
+﻿from collections.abc import Callable
+
+from rag.graph_state import RAGState
 from rag.grader import RelevanceGrader
 from rag.hybrid import HybridRetriever
 from rag.multi_query_retriever import MultiQueryRetriever
@@ -135,9 +137,11 @@ class GenerateNode:
         self,
         generator,
         trace: RAGTrace | None = None,
+        on_token: Callable[[str], None] | None = None,
     ) -> None:
         self.generator = generator
         self.trace = trace
+        self.on_token = on_token
 
     def __call__(self, state: RAGState) -> dict:
         if not state.context:
@@ -145,17 +149,18 @@ class GenerateNode:
                 "Cannot generate an answer without context."
             )
 
+        generate_kwargs = {
+            "query": state.query,
+            "context": state.context,
+        }
+        if self.on_token is not None:
+            generate_kwargs["on_token"] = self.on_token
+
         if self.trace is not None:
             with StageTimer(self.trace, "generation"):
-                result = self.generator.generate(
-                    query=state.query,
-                    context=state.context,
-                )
+                result = self.generator.generate(**generate_kwargs)
         else:
-            result = self.generator.generate(
-                query=state.query,
-                context=state.context,
-            )
+            result = self.generator.generate(**generate_kwargs)
 
         return {
             "answer": result.answer,

@@ -1,5 +1,6 @@
 ﻿import logging
 import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -159,6 +160,7 @@ class RAGService:
     def _build_graph(
         self,
         trace: RAGTrace,
+        on_token: Callable[[str], None] | None = None,
     ):
         """Construct the graph for one query."""
         retrieve_node = RetrieveNode(
@@ -184,6 +186,7 @@ class RAGService:
         generate_node = GenerateNode(
             generator=self.generator,
             trace=trace,
+            on_token=on_token,
         )
 
         grounding_node = GroundingNode(
@@ -209,6 +212,7 @@ class RAGService:
     def query(
         self,
         question: str,
+        on_token: Callable[[str], None] | None = None,
     ) -> dict[str, Any]:
         """Run a question through the RAG graph."""
         if not question.strip():
@@ -217,7 +221,7 @@ class RAGService:
         trace = RAGTrace(query=question)
         start_time = time.perf_counter()
 
-        graph = self._build_graph(trace=trace)
+        graph = self._build_graph(trace=trace, on_token=on_token)
 
         initial_state = {
             "query": question,

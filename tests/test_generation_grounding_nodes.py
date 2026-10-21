@@ -223,3 +223,34 @@ def test_grounding_node_rejects_empty_context() -> None:
         match="Cannot check grounding without context",
     ):
         node(state)
+
+
+class StreamingFakeGenerator:
+    def __init__(self) -> None:
+        self.received_on_token = None
+
+    def generate(
+        self,
+        query: str,
+        context: list[str],
+        on_token=None,
+    ) -> GenerationResult:
+        self.received_on_token = on_token
+
+        return GenerationResult(
+            answer="ok",
+            model="fake-model",
+        )
+
+
+def test_generate_node_forwards_on_token_callback() -> None:
+    generator = StreamingFakeGenerator()
+
+    def callback(text: str) -> None:
+        return None
+
+    node = GenerateNode(generator, on_token=callback)
+
+    node(RAGState(query="question", context=["context"]))
+
+    assert generator.received_on_token is callback

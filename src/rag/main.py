@@ -163,10 +163,36 @@ async def rag_event_stream(
         "message": "Processing query...",
     })
 
+    loop = asyncio.get_running_loop()
+    token_queue: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue()
+
+    def on_token(text: str) -> None:
+        # Runs in the worker thread while the model generates.
+        loop.call_soon_threadsafe(
+            token_queue.put_nowait,
+            {"type": "token", "text": text},
+        )
+
     try:
         service = get_rag_service()
-        result = await asyncio.to_thread(service.query, query)
 
+        task = asyncio.create_task(
+            asyncio.to_thread(service.query, query, on_token)
+        )
+        task.add_done_callback(
+            lambda _: token_queue.put_nowait(None)
+        )
+
+        while True:
+            event = await token_queue.get()
+            if event is None:
+                break
+            yield encode_event(event)
+
+        result = await task
+
+        # The final answer is authoritative: it replaces any streamed
+        # text (for example with the fallback when grounding fails).
         yield encode_event({
             "type": "answer",
             "answer": result["answer"],

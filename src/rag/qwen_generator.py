@@ -1,4 +1,6 @@
 ﻿
+from collections.abc import Callable
+
 from rag.generation_prompt import build_generation_prompt
 from rag.generator import GenerationResult
 from rag.qwen_model import QwenModelBundle
@@ -35,6 +37,7 @@ class QwenLocalGenerator:
         self,
         query: str,
         context: list[str],
+        on_token: Callable[[str], None] | None = None,
     ) -> GenerationResult:
         prompt = build_generation_prompt(
             query=query,
@@ -57,9 +60,12 @@ class QwenLocalGenerator:
             },
         ]
 
+        stream_options = {} if on_token is None else {"on_token": on_token}
+
         answer = self.model_bundle.generate_tokens(
             messages,
             max_new_tokens=self.max_new_tokens,
+            **stream_options,
         )
 
         if not answer:
