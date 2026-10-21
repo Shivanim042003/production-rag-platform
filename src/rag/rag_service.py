@@ -293,12 +293,14 @@ class RAGService:
             },
         )
 
+        # Only cite chunks the grader accepted as context.
         sources = [
             {
                 "chunk_id": result.chunk.chunk_id,
                 "score": float(result.score),
             }
-            for result in reranked_results
+            for result, grade in graded_results
+            if grade.relevant
         ]
 
         return {
