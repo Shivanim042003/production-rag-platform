@@ -39,4 +39,8 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-m 'not model'"
+markers = [
+    "model: loads real ML models and needs about 6 GB of free RAM (run with -m model)",
+]
 pythonpath = ["src"]
