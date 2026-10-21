@@ -1,0 +1,26 @@
+﻿{
+  "dataset_chunks": 20,
+  "unique_queries": 8,
+  "measured_rounds": 3,
+  "rerank_5": {
+    "precision_at_5": 0.4500,
+    "recall_at_5": 0.9167,
+    "mrr": 1.0000,
+    "ndcg_at_5": 0.9037,
+    "mean_retrieval_ms": 11.76,
+    "mean_reranking_ms": 54.15,
+    "mean_total_ms": 65.92,
+    "median_total_ms": 56.93
+  },
+  "rerank_10": {
+    "precision_at_5": 0.4500,
+    "recall_at_5": 0.9167,
+    "mrr": 1.0000,
+    "ndcg_at_5": 0.8971,
+    "mean_retrieval_ms": 9.15,
+    "mean_reranking_ms": 90.94,
+    "mean_total_ms": 100.09,
+    "median_total_ms": 93.79
+  },
+  "note": "Small-corpus microbenchmark; three repeated rounds over eight unique queries. Not a production load test."
+}

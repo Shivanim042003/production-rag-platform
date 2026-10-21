@@ -13,3 +13,5 @@ __pycache__/
 storage/
 
 *.egg-info/
+*.bak
+benchmarks/results/api_latest.json

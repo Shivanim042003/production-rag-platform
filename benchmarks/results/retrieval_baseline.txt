@@ -1,0 +1,180 @@
+Loaded 20 chunks.
+Loaded 8 benchmark queries.
+
+================================================================================
+QUERY: What are PostgreSQL indexes used for?
+================================================================================
+
+HYBRID TOP-5
+1. postgresql_chunk_001 (score=0.032787)
+2. postgresql_performance_chunk_001 (score=0.032258)
+3. postgresql_chunk_002 (score=0.031025)
+4. postgresql_chunk_003 (score=0.030769)
+5. postgresql_performance_chunk_003 (score=0.030118)
+
+RERANKED TOP-5
+1. postgresql_chunk_001 (score=6.5391)
+2. postgresql_chunk_002 (score=5.8481)
+3. postgresql_chunk_004 (score=5.5728)
+4. postgresql_performance_chunk_001 (score=5.2956)
+5. postgresql_performance_chunk_003 (score=4.6706)
+
+Candidate Recall@10: 1.0000
+
+================================================================================
+QUERY: How does PostgreSQL inspect query execution plans?
+================================================================================
+
+HYBRID TOP-5
+1. postgresql_chunk_003 (score=0.032787)
+2. postgresql_performance_chunk_002 (score=0.031754)
+3. postgresql_performance_chunk_001 (score=0.031754)
+4. postgresql_performance_chunk_003 (score=0.031746)
+5. postgresql_chunk_002 (score=0.030769)
+
+RERANKED TOP-5
+1. postgresql_chunk_003 (score=8.0255)
+2. postgresql_performance_chunk_003 (score=6.0340)
+3. postgresql_performance_chunk_001 (score=5.7484)
+4. postgresql_performance_chunk_002 (score=5.6499)
+5. postgresql_chunk_002 (score=4.9337)
+
+Candidate Recall@10: 1.0000
+
+================================================================================
+QUERY: How does PostgreSQL use statistics for query planning?
+================================================================================
+
+HYBRID TOP-5
+1. postgresql_performance_chunk_003 (score=0.032787)
+2. postgresql_chunk_002 (score=0.032002)
+3. postgresql_chunk_003 (score=0.031281)
+4. postgresql_performance_chunk_001 (score=0.031010)
+5. postgresql_chunk_001 (score=0.030536)
+
+RERANKED TOP-5
+1. postgresql_performance_chunk_003 (score=7.8923)
+2. postgresql_performance_chunk_001 (score=6.3803)
+3. postgresql_chunk_002 (score=6.0736)
+4. postgresql_chunk_003 (score=5.7910)
+5. postgresql_performance_chunk_002 (score=4.3389)
+
+Candidate Recall@10: 1.0000
+
+================================================================================
+QUERY: How does PostgreSQL provide concurrency control?
+================================================================================
+
+HYBRID TOP-5
+1. postgresql_chunk_004 (score=0.032787)
+2. postgresql_chunk_001 (score=0.032258)
+3. postgresql_chunk_003 (score=0.031258)
+4. postgresql_chunk_002 (score=0.030798)
+5. postgresql_performance_chunk_001 (score=0.030777)
+
+RERANKED TOP-5
+1. postgresql_chunk_004 (score=8.5576)
+2. postgresql_chunk_001 (score=2.7637)
+3. postgresql_performance_chunk_003 (score=-0.2585)
+4. postgresql_chunk_002 (score=-1.0906)
+5. postgresql_performance_chunk_001 (score=-1.2701)
+
+Candidate Recall@10: 1.0000
+
+================================================================================
+QUERY: How does Redis reduce database load?
+================================================================================
+
+HYBRID TOP-5
+1. redis_performance_chunk_001 (score=0.032266)
+2. redis_chunk_002 (score=0.032258)
+3. redis_chunk_001 (score=0.032018)
+4. redis_chunk_003 (score=0.030777)
+5. redis_performance_chunk_003 (score=0.030310)
+
+RERANKED TOP-5
+1. redis_performance_chunk_001 (score=9.3711)
+2. redis_chunk_002 (score=8.0144)
+3. redis_chunk_001 (score=5.4661)
+4. redis_chunk_003 (score=1.9719)
+5. redis_performance_chunk_004 (score=0.6109)
+
+Candidate Recall@10: 1.0000
+
+================================================================================
+QUERY: How does Redis expiration work?
+================================================================================
+
+HYBRID TOP-5
+1. redis_chunk_003 (score=0.032787)
+2. redis_chunk_002 (score=0.031746)
+3. redis_chunk_004 (score=0.031281)
+4. redis_chunk_001 (score=0.031281)
+5. redis_performance_chunk_003 (score=0.030769)
+
+RERANKED TOP-5
+1. redis_chunk_003 (score=7.0496)
+2. redis_performance_chunk_001 (score=0.3666)
+3. redis_chunk_001 (score=0.0551)
+4. redis_chunk_002 (score=-0.7955)
+5. redis_performance_chunk_003 (score=-0.8763)
+
+Candidate Recall@10: 1.0000
+
+================================================================================
+QUERY: What data structures does Redis support?
+================================================================================
+
+HYBRID TOP-5
+1. redis_chunk_001 (score=0.032787)
+2. redis_performance_chunk_001 (score=0.032002)
+3. redis_chunk_002 (score=0.031754)
+4. redis_chunk_004 (score=0.030579)
+5. redis_performance_chunk_003 (score=0.030310)
+
+RERANKED TOP-5
+1. redis_chunk_001 (score=9.6862)
+2. redis_performance_chunk_001 (score=5.8890)
+3. redis_performance_chunk_003 (score=2.6422)
+4. redis_chunk_004 (score=1.8702)
+5. redis_chunk_002 (score=1.7905)
+
+Candidate Recall@10: 1.0000
+
+================================================================================
+QUERY: What factors affect Redis performance?
+================================================================================
+
+HYBRID TOP-5
+1. redis_performance_chunk_001 (score=0.032018)
+2. redis_chunk_002 (score=0.031754)
+3. redis_chunk_001 (score=0.031545)
+4. redis_performance_chunk_004 (score=0.031054)
+5. redis_chunk_004 (score=0.031025)
+
+RERANKED TOP-5
+1. redis_performance_chunk_001 (score=7.6241)
+2. redis_performance_chunk_004 (score=2.8738)
+3. redis_chunk_004 (score=-0.3482)
+4. redis_chunk_001 (score=-0.3956)
+5. redis_chunk_002 (score=-0.9807)
+
+Candidate Recall@10: 1.0000
+
+================================================================================
+AVERAGE BENCHMARK RESULTS
+================================================================================
+
+HYBRID
+  Precision@5:      0.4500
+  Recall@5:         0.9167
+  MRR:              1.0000
+  NDCG@5:           0.8812
+  Candidate Recall: 1.0000
+
+HYBRID + CROSS-ENCODER
+  Precision@5:      0.4500
+  Recall@5:         0.9167
+  MRR:              1.0000
+  NDCG@5:           0.8971
+  Candidate Recall: 1.0000

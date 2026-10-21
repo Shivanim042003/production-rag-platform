@@ -1,4 +1,6 @@
 ﻿import json
+import time
+import statistics
 from pathlib import Path
 
 from rag.bm25 import BM25Retriever
@@ -93,19 +95,40 @@ def main() -> None:
         CrossEncoderScorer()
     )
 
+    # Warm up both stages so the first query is not penalized by cold start.
+    warmup_query = benchmark[0]["query"]
+    warmup_candidates = hybrid.retrieve(
+        query=warmup_query,
+        top_k=CANDIDATE_K,
+        dense_k=CANDIDATE_K,
+        bm25_k=CANDIDATE_K,
+    )
+    reranker.rerank(
+        query=warmup_query,
+        results=warmup_candidates,
+        top_k=FINAL_K,
+    )
+
     hybrid_metrics = []
     reranked_metrics = []
+    hybrid_latencies_ms = []
+    reranker_latencies_ms = []
+    combined_latencies_ms = []
 
     for item in benchmark:
         query = item["query"]
         relevant_ids = set(item["relevant_chunks"])
 
+        hybrid_start = time.perf_counter()
         candidates = hybrid.retrieve(
             query=query,
             top_k=CANDIDATE_K,
             dense_k=CANDIDATE_K,
             bm25_k=CANDIDATE_K,
         )
+        hybrid_ms = (time.perf_counter() - hybrid_start) * 1000
+
+        reranker_start = time.perf_counter()
 
         candidate_ids = [
             result.chunk.chunk_id
@@ -124,6 +147,12 @@ def main() -> None:
             results=candidates,
             top_k=FINAL_K,
         )
+
+        reranker_ms = (time.perf_counter() - reranker_start) * 1000
+
+        hybrid_latencies_ms.append(hybrid_ms)
+        reranker_latencies_ms.append(reranker_ms)
+        combined_latencies_ms.append(hybrid_ms + reranker_ms)
 
         reranked_ids = [
             result.chunk.chunk_id
@@ -208,6 +237,31 @@ def main() -> None:
             f"{hybrid_result['candidate_recall']:.4f}"
         )
 
+        print(
+            f"\nLATENCY: hybrid={hybrid_ms:.2f} ms, "
+            f"rerank={reranker_ms:.2f} ms, "
+            f"total={hybrid_ms + reranker_ms:.2f} ms"
+        )
+
+        print("\nPER-QUERY METRICS")
+        print(
+            f"  {'Metric':<18} {'Hybrid':>10} "
+            f"{'Reranked':>10} {'Change':>10}"
+        )
+
+        for metric, label in [
+            ("precision_at_5", "Precision@5"),
+            ("recall_at_5", "Recall@5"),
+            ("mrr", "MRR"),
+            ("ndcg_at_5", "NDCG@5"),
+        ]:
+            before = hybrid_result[metric]
+            after = reranked_result[metric]
+            print(
+                f"  {label:<18} {before:>10.4f} "
+                f"{after:>10.4f} {after - before:>+10.4f}"
+            )
+
     metric_names = [
         "precision_at_5",
         "recall_at_5",
@@ -234,6 +288,20 @@ def main() -> None:
 
     print_metrics("HYBRID", hybrid_average)
     print_metrics("HYBRID + CROSS-ENCODER", reranked_average)
+
+    print("\nLATENCY SUMMARY (milliseconds)")
+    for label, values in [
+        ("Hybrid retrieval", hybrid_latencies_ms),
+        ("Cross-encoder reranking", reranker_latencies_ms),
+        ("Combined retrieval + reranking", combined_latencies_ms),
+    ]:
+        print(
+            f"  {label}: "
+            f"mean={statistics.mean(values):.2f}, "
+            f"median={statistics.median(values):.2f}, "
+            f"min={min(values):.2f}, "
+            f"max={max(values):.2f}"
+        )
 
 
 if __name__ == "__main__":
