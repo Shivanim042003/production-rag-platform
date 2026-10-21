@@ -173,7 +173,7 @@ class RAGService:
 
         rerank_node = RerankNode(
             reranker=self.reranker,
-            top_k=5,
+            top_k=3,
             trace=trace,
         )
 

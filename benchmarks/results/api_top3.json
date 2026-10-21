@@ -1,0 +1,679 @@
+{
+  "created_at_utc": "2026-10-21T09:21:38.428309+00:00",
+  "base_url": "http://localhost:8000",
+  "rounds": 2,
+  "unique_queries": 8,
+  "warmup_requests": 1,
+  "measured_requests": 16,
+  "successful_requests": 16,
+  "failed_requests": 0,
+  "grounded_responses": 16,
+  "ungrounded_responses": 0,
+  "sequential_client_latency": {
+    "count": 16,
+    "mean_ms": 15062.13,
+    "median_ms": 12533.38,
+    "p95_ms": 25812.53,
+    "p99_ms": 26414.66,
+    "min_ms": 8430.95,
+    "max_ms": 26565.19
+  },
+  "server_reported_latency": {
+    "count": 16,
+    "mean_ms": 15058.68,
+    "median_ms": 12530.01,
+    "p95_ms": 25809.59,
+    "p99_ms": 26412.21,
+    "min_ms": 8426.73,
+    "max_ms": 26562.86
+  },
+  "approx_sequential_throughput_qps": 0.066,
+  "records": [
+    {
+      "round": 1,
+      "query_index": 1,
+      "query": "What is PostgreSQL and what is it used for?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 26565.19,
+      "server_total_duration_ms": 26562.85923700125,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 3,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.0011650008673314005
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 22.418369000661187
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 124.88939199829474
+        },
+        {
+          "name": "grading",
+          "duration_ms": 117.11978099992848
+        },
+        {
+          "name": "generation",
+          "duration_ms": 23322.238467000716
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2970.7366550028382
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "query_index": 2,
+      "query": "How do PostgreSQL indexes improve query performance?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 22466.67,
+      "server_total_duration_ms": 22464.12779399907,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 3,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.0010920011845882982
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 20.105349001823924
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 124.7175789976609
+        },
+        {
+          "name": "grading",
+          "duration_ms": 96.00116199726472
+        },
+        {
+          "name": "generation",
+          "duration_ms": 19503.883435001626
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2713.5555390013906
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "query_index": 3,
+      "query": "How do execution plans help optimize PostgreSQL queries?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 17703.27,
+      "server_total_duration_ms": 17699.725598999066,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 3,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.0012609998520929366
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 22.879979998833733
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 133.5968409985071
+        },
+        {
+          "name": "grading",
+          "duration_ms": 97.39527900092071
+        },
+        {
+          "name": "generation",
+          "duration_ms": 14806.946899003378
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2633.244499000284
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "query_index": 4,
+      "query": "Why are statistics important to PostgreSQL query planning?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 12145.64,
+      "server_total_duration_ms": 12142.153331002191,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 3,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.0011829979484900832
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 21.737510000093607
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 116.99938599849702
+        },
+        {
+          "name": "grading",
+          "duration_ms": 197.20187100028852
+        },
+        {
+          "name": "generation",
+          "duration_ms": 9431.37158999889
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2367.145034000714
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "query_index": 5,
+      "query": "How does PostgreSQL handle concurrency?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 11239.93,
+      "server_total_duration_ms": 11235.820968002372,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 2,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.001119999069487676
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 20.384384999488248
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 121.85305100138066
+        },
+        {
+          "name": "grading",
+          "duration_ms": 134.79964199723327
+        },
+        {
+          "name": "generation",
+          "duration_ms": 8917.84522799935
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2034.557382001367
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "query_index": 6,
+      "query": "What is Redis used for in caching?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 8479.41,
+      "server_total_duration_ms": 8475.38809999969,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 3,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.0011060001270379871
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 22.85953899991
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 153.06651299761143
+        },
+        {
+          "name": "grading",
+          "duration_ms": 113.90367800049717
+        },
+        {
+          "name": "generation",
+          "duration_ms": 5956.477599000209
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2223.43323899986
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "query_index": 7,
+      "query": "How does Redis key expiration work?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 12921.11,
+      "server_total_duration_ms": 12917.868034001003,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 3,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.0014270008250605315
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 22.04254399839556
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 123.7197019981977
+        },
+        {
+          "name": "grading",
+          "duration_ms": 193.68225499783875
+        },
+        {
+          "name": "generation",
+          "duration_ms": 10173.771113997645
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2397.953404000873
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "query_index": 8,
+      "query": "What Redis data structures are available?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 9968.99,
+      "server_total_duration_ms": 9964.887635000196,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 2,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.001119999069487676
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 20.42365799934487
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 117.80658100178698
+        },
+        {
+          "name": "grading",
+          "duration_ms": 106.74238000137848
+        },
+        {
+          "name": "generation",
+          "duration_ms": 7460.0117259979015
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2254.3804320011986
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "query_index": 1,
+      "query": "What is PostgreSQL and what is it used for?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 25561.64,
+      "server_total_duration_ms": 25558.502413998212,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 3,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.001314998371526599
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 20.987867999792797
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 169.10719999941648
+        },
+        {
+          "name": "grading",
+          "duration_ms": 205.59028599745943
+        },
+        {
+          "name": "generation",
+          "duration_ms": 22216.80716099945
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2939.391768999485
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "query_index": 2,
+      "query": "How do PostgreSQL indexes improve query performance?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 21828.3,
+      "server_total_duration_ms": 21825.867386000027,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 3,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.0011299998732283711
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 23.804460997780552
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 129.06403399756528
+        },
+        {
+          "name": "grading",
+          "duration_ms": 97.0691690017702
+        },
+        {
+          "name": "generation",
+          "duration_ms": 18879.501549999986
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2690.965715999482
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "query_index": 3,
+      "query": "How do execution plans help optimize PostgreSQL queries?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 17684.11,
+      "server_total_duration_ms": 17680.954423001822,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 3,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.001167998561868444
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 21.94029200109071
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 131.3315439983853
+        },
+        {
+          "name": "grading",
+          "duration_ms": 114.26386699895374
+        },
+        {
+          "name": "generation",
+          "duration_ms": 14765.479939997022
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2642.4738690002414
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "query_index": 4,
+      "query": "Why are statistics important to PostgreSQL query planning?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 12144.13,
+      "server_total_duration_ms": 12140.388785999676,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 3,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.001014999725157395
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 25.08734699949855
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 176.27454799730913
+        },
+        {
+          "name": "grading",
+          "duration_ms": 245.0025899997854
+        },
+        {
+          "name": "generation",
+          "duration_ms": 9319.209435998346
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2368.3909159990435
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "query_index": 5,
+      "query": "How does PostgreSQL handle concurrency?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 11117.41,
+      "server_total_duration_ms": 11113.799194998137,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 2,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.0013990029401611537
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 20.92818899836857
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 122.90931600000476
+        },
+        {
+          "name": "grading",
+          "duration_ms": 165.34572499949718
+        },
+        {
+          "name": "generation",
+          "duration_ms": 8723.860988000524
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2073.546523999539
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "query_index": 6,
+      "query": "What is Redis used for in caching?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 8430.95,
+      "server_total_duration_ms": 8426.726743000472,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 3,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.001725002221064642
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 21.977411000989377
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 114.33469400071772
+        },
+        {
+          "name": "grading",
+          "duration_ms": 74.56810499934363
+        },
+        {
+          "name": "generation",
+          "duration_ms": 6056.39088099997
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2153.6608450005588
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "query_index": 7,
+      "query": "How does Redis key expiration work?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 12970.64,
+      "server_total_duration_ms": 12967.150299002242,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 3,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.0011659976735245436
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 21.37169100024039
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 120.27683799897204
+        },
+        {
+          "name": "grading",
+          "duration_ms": 152.61964599994826
+        },
+        {
+          "name": "generation",
+          "duration_ms": 10157.992764998198
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2507.9647210004623
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "query_index": 8,
+      "query": "What Redis data structures are available?",
+      "status_code": 200,
+      "success": true,
+      "error": null,
+      "client_latency_ms": 9766.72,
+      "server_total_duration_ms": 9762.700964001851,
+      "grounded": true,
+      "retry_count": 0,
+      "candidate_count": 10,
+      "relevant_context_count": 2,
+      "stage_timings": [
+        {
+          "name": "query_transform",
+          "duration_ms": 0.0011709998943842947
+        },
+        {
+          "name": "retrieval",
+          "duration_ms": 20.66426099918317
+        },
+        {
+          "name": "reranking",
+          "duration_ms": 100.64898400014499
+        },
+        {
+          "name": "grading",
+          "duration_ms": 79.86602999881143
+        },
+        {
+          "name": "generation",
+          "duration_ms": 7424.035758998798
+        },
+        {
+          "name": "grounding",
+          "duration_ms": 2131.9084620008653
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Small benchmark with eight unique queries.",
+    "Sequential requests only; no concurrent load test.",
+    "Client latency includes HTTP overhead and response transfer.",
+    "Throughput is approximate and excludes warm-up time."
+  ]
+}

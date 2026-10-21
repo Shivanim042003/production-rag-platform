@@ -51,7 +51,9 @@ class QwenLocalGenerator:
                     "You are a document question-answering assistant. "
                     "Answer only using the provided context. "
                     "Do not use outside knowledge. "
-                    "Write a complete, direct answer."
+                    "Write a complete, direct answer. "
+                    "Only state facts that the context says explicitly, "
+                    "and do not merge separate facts into new claims."
                 ),
             },
             {
