@@ -1,4 +1,4 @@
-﻿from rag.local_generator import LocalGenerator
+from rag.local_generator import LocalGenerator
 
 
 def main() -> None:

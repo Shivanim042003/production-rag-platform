@@ -1,4 +1,4 @@
-﻿from rag.fusion import reciprocal_rank_fusion
+from rag.fusion import reciprocal_rank_fusion
 from rag.hybrid import HybridRetriever
 
 

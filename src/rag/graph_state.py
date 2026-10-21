@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass, field
+from dataclasses import dataclass, field
 
 from rag.grader import RelevanceGrade
 from rag.models import RetrievalResult

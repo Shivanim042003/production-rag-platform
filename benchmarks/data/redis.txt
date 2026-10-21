@@ -1,4 +1,4 @@
-﻿Redis is an in-memory data store commonly used for caching and low-latency workloads.
+Redis is an in-memory data store commonly used for caching and low-latency workloads.
 
 Redis supports data structures including strings, lists, sets, sorted sets, hashes, streams, and bitmaps.
 

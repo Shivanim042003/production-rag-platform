@@ -1,4 +1,4 @@
-﻿from collections.abc import Callable
+from collections.abc import Callable
 
 from rag.graph_state import RAGState
 from rag.grader import RelevanceGrader

@@ -1,4 +1,4 @@
-﻿from rag.qwen_generator import QwenLocalGenerator
+from rag.qwen_generator import QwenLocalGenerator
 
 
 def main() -> None:

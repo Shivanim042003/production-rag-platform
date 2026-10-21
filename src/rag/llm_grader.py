@@ -1,4 +1,4 @@
-﻿from openai import OpenAI
+from openai import OpenAI
 from pydantic import BaseModel, Field
 
 from rag.grader import RelevanceGrade

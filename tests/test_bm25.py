@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from rag.bm25 import BM25Retriever
 from rag.models import DocumentChunk, RetrievalResult

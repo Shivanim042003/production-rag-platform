@@ -1,4 +1,4 @@
-﻿import statistics
+import statistics
 import time
 
 from run_retrieval_benchmark import (

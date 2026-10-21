@@ -1,4 +1,4 @@
-﻿PostgreSQL is an open-source relational database management system.
+PostgreSQL is an open-source relational database management system.
 
 PostgreSQL supports SQL queries and provides transactional guarantees through ACID properties. Transactions allow multiple database operations to succeed or fail together.
 

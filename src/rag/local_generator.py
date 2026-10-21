@@ -1,4 +1,4 @@
-﻿import torch
+import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 from rag.generation_prompt import build_generation_prompt

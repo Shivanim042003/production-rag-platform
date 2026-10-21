@@ -1,4 +1,4 @@
-﻿from rag.bm25 import BM25Retriever
+from rag.bm25 import BM25Retriever
 from rag.embeddings import EmbeddingModel
 from rag.fusion import reciprocal_rank_fusion
 from rag.models import RetrievalResult

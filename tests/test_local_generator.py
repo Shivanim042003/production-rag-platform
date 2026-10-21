@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 import torch
 
 from rag.local_generator import LocalGenerator

@@ -1,4 +1,4 @@
-﻿from rag.bm25 import BM25Retriever
+from rag.bm25 import BM25Retriever
 from rag.embeddings import EmbeddingModel
 from rag.ingestion import ingest_txt
 from rag.vector_store import FaissVectorStore

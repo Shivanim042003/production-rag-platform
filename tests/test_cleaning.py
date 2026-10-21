@@ -1,4 +1,4 @@
-﻿from rag.cleaning import clean_text
+from rag.cleaning import clean_text
 
 
 def test_clean_text_normalizes_whitespace() -> None:

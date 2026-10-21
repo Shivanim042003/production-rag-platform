@@ -1,4 +1,4 @@
-﻿from rag.graph_nodes import GradeNode, RerankNode, RetrieveNode
+from rag.graph_nodes import GradeNode, RerankNode, RetrieveNode
 from rag.grader import RelevanceGrade
 from rag.graph_state import RAGState
 from rag.models import DocumentChunk, RetrievalResult

@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from rag.generation_prompt import build_generation_prompt
 

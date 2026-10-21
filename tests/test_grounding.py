@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from rag.grounding import GroundingChecker, GroundingResult
 

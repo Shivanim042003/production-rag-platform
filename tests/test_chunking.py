@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from rag.chunking import fixed_size_chunks
 from rag.models import DocumentChunk, RawDocument

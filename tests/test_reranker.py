@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from rag.models import DocumentChunk, RetrievalResult
 from rag.reranker import Reranker

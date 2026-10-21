@@ -1,4 +1,4 @@
-﻿from rag.graph_nodes import (
+from rag.graph_nodes import (
     GenerateNode,
     GradeNode,
     GroundingNode,

@@ -1,4 +1,4 @@
-﻿
+
 import re
 
 from rag.grounding import GroundingResult

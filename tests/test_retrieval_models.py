@@ -1,4 +1,4 @@
-﻿from rag.models import DocumentChunk, RetrievalResult
+from rag.models import DocumentChunk, RetrievalResult
 
 
 def test_retrieval_result_stores_retrieval_information() -> None:

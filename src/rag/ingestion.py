@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 
 from rag.chunking import fixed_size_chunks
 from rag.cleaning import clean_text

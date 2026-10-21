@@ -1,4 +1,4 @@
-﻿from collections.abc import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 from sentence_transformers import CrossEncoder

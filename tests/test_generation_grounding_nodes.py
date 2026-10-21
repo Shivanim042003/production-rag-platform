@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from rag.generator import GenerationResult
 from rag.graph_nodes import GenerateNode, GroundingNode

@@ -1,4 +1,4 @@
-﻿import math
+import math
 from collections.abc import Sequence
 
 

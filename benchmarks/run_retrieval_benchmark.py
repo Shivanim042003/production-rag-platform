@@ -1,4 +1,4 @@
-﻿import json
+import json
 import time
 import statistics
 from pathlib import Path

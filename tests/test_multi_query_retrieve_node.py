@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from rag.graph_nodes import MultiQueryRetrieveNode
 from rag.graph_state import RAGState

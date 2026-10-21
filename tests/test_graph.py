@@ -1,4 +1,4 @@
-﻿from rag.generator import GenerationResult
+from rag.generator import GenerationResult
 from rag.graph import build_rag_graph
 from rag.graph_nodes import (
     GenerateNode,

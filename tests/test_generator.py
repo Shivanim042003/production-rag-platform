@@ -1,4 +1,4 @@
-﻿from dataclasses import fields
+from dataclasses import fields
 
 from rag.generator import GenerationResult
 

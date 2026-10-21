@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from rag.embeddings import EmbeddingModel
 from rag.ingestion import ingest_txt

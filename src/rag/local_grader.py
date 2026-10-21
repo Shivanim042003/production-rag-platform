@@ -1,4 +1,4 @@
-﻿from rag.cross_encoder import CrossEncoderScorer
+from rag.cross_encoder import CrossEncoderScorer
 from rag.grader import RelevanceGrade
 
 

@@ -1,4 +1,4 @@
-﻿PostgreSQL query performance depends on indexes, query structure, statistics, available memory, and the chosen execution plan.
+PostgreSQL query performance depends on indexes, query structure, statistics, available memory, and the chosen execution plan.
 
 An index can reduce the amount of data PostgreSQL needs to scan. However, indexes also consume storage and add overhead to INSERT, UPDATE, and DELETE operations.
 

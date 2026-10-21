@@ -1,4 +1,4 @@
-﻿from collections.abc import Sequence
+from collections.abc import Sequence
 
 from rank_bm25 import BM25Okapi
 

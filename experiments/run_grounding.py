@@ -1,4 +1,4 @@
-﻿from rag.qwen_grounding import QwenGroundingScorer
+from rag.qwen_grounding import QwenGroundingScorer
 
 
 def run_case(

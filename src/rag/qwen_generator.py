@@ -1,4 +1,4 @@
-﻿
+
 from collections.abc import Callable
 
 from rag.generation_prompt import build_generation_prompt

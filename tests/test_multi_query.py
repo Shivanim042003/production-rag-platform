@@ -1,4 +1,4 @@
-﻿import torch
+import torch
 
 from rag.multi_query import (
     IdentityMultiQueryGenerator,

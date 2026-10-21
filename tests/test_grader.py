@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from rag.grader import RelevanceGrade, RelevanceGrader
 from rag.models import DocumentChunk, RetrievalResult

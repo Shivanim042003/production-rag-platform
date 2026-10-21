@@ -1,4 +1,4 @@
-﻿from rag.models import DocumentChunk, RawDocument
+from rag.models import DocumentChunk, RawDocument
 
 
 def fixed_size_chunks(

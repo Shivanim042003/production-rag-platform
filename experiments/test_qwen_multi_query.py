@@ -1,4 +1,4 @@
-﻿from rag.multi_query import QwenMultiQueryGenerator
+from rag.multi_query import QwenMultiQueryGenerator
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 

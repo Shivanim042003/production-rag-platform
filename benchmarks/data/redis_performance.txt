@@ -1,4 +1,4 @@
-﻿Redis performance depends on memory usage, command complexity, network latency, data structures, and workload patterns.
+Redis performance depends on memory usage, command complexity, network latency, data structures, and workload patterns.
 
 Redis can reduce database load by serving frequently requested values directly from memory.
 

@@ -1,4 +1,4 @@
-﻿from collections.abc import Sequence
+from collections.abc import Sequence
 
 import faiss
 import numpy as np

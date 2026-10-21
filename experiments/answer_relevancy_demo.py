@@ -1,4 +1,4 @@
-﻿from rag.answer_relevancy import EmbeddingAnswerRelevancyScorer
+from rag.answer_relevancy import EmbeddingAnswerRelevancyScorer
 
 
 def main() -> None:

@@ -1,4 +1,4 @@
-﻿from typing import Protocol
+from typing import Protocol
 
 import torch
 from transformers import PreTrainedModel, PreTrainedTokenizerBase

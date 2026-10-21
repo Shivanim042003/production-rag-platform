@@ -1,4 +1,4 @@
-﻿from rag.graph_state import RAGState
+from rag.graph_state import RAGState
 
 
 def test_rag_state_initializes_with_query() -> None:

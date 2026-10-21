@@ -1,4 +1,4 @@
-﻿import numpy as np
+import numpy as np
 import pytest
 
 from rag.bm25 import BM25Retriever

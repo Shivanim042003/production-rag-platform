@@ -1,4 +1,4 @@
-﻿import numpy as np
+import numpy as np
 import pytest
 
 from rag.models import DocumentChunk, RetrievalResult

@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from rag.fusion import reciprocal_rank_fusion
 from rag.models import DocumentChunk, RetrievalResult
