@@ -2,7 +2,7 @@
 
 A production-oriented Retrieval-Augmented Generation (RAG) platform focused on reliable retrieval, reranking, grounding, evaluation, security, observability, and deployment of LLM-powered applications.
 
-The system combines hybrid BM25 + dense retrieval, cross-encoder reranking, relevance grading, local LLM generation, grounding verification, LangGraph orchestration, FastAPI APIs, SSE streaming, a React frontend, Docker deployment, and automated evaluation.
+The system combines hybrid BM25 + dense retrieval, cross-encoder reranking, relevance grading, local LLM generation, grounding verification, LangGraph orchestration, FastAPI APIs, SSE streaming, a React frontend, and automated evaluation.
 
 ---
 
@@ -31,32 +31,35 @@ The application is exposed through a FastAPI backend and a React + TypeScript fr
 
 ## Quick start
 
+Backend (Python 3.11+; CPU is enough):
+
 ```bash
-docker compose up --build
+pip install -e ".[dev]"
+uvicorn rag.main:app --port 8000
+```
+
+Frontend (in a second terminal):
+
+```bash
+cd frontend
+npm ci
+npm run dev
 ```
 
 - API: http://localhost:8000 (docs at `/docs`)
 - UI: http://localhost:5173
 
-The first start downloads the models (a few GB) into the `rag-hf-cache` volume, so later starts are fast. `GET /ready` returns 503 until all models are loaded, usually 1 to 3 minutes. The image runs on CPU only (about 2.2 GB).
+The first start downloads the models (a few GB) into the Hugging Face cache, so later starts are fast. `GET /ready` returns 503 until all models are loaded, usually 1 to 3 minutes.
+
+To serve the UI from the API on a single port, run `npm run build` in `frontend`, then set `STATIC_DIR=frontend/dist` before starting uvicorn.
 
 Configuration:
 
 | Variable | Where | Default | Purpose |
 | --- | --- | --- | --- |
-| `CORS_ORIGINS` | API container | `http://localhost:5173` | Comma-separated allowed browser origins |
-| `VITE_API_URL` | frontend build arg | `http://localhost:8000` | API base URL baked into the UI |
-
-Local development without Docker:
-
-```bash
-pip install -e ".[dev]"
-uvicorn rag.main:app --reload
-
-cd frontend
-npm ci
-npm run dev
-```
+| `CORS_ORIGINS` | API | `http://localhost:5173` | Comma-separated allowed browser origins |
+| `STATIC_DIR` | API | unset | Folder with the built UI to serve at `/` |
+| `VITE_API_URL` | frontend build | `http://localhost:8000` | API base URL baked into the UI |
 
 ---
 
